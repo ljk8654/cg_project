@@ -147,14 +147,12 @@ GLvoid drawScene()
 	glm::mat4 box = glm::mat4(1.0f);
 	glm::mat4 box_scale = glm::mat4(1.0f);
 
-	int i = 1;
 	GLuint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	GLuint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLuint projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
 	glm::vec3 newColor(0.0f, 0.0f, 0.0f);
 
-	int a = 0;
 	glm::mat4 mTransform = glm::mat4(1.0f);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &mTransform[0][0]);
 
