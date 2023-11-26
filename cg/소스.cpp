@@ -6,6 +6,7 @@
 #include <math.h>
 // 필요한 헤더 include 따로 추가하셔야 합니다~
 
+// git branch dev
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
@@ -189,7 +190,8 @@ GLvoid drawScene()
 
 
 
-	glutSwapBuffers();
+	glutSwapBuffers();
+
 }
 
 //--- 다시그리기 콜백 함수
