@@ -20,10 +20,10 @@
 
 glm::vec3 cameraPos = glm::vec3(-0.25, +1.0, -1); //--- 카메라 위치
 
-float light_x = 0;
-float light_y = 0;
-float light_z = 0.5;
-
+float light_x = 7;
+float light_y = 10;
+float light_z = 10;
+float zcamera;
 
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -84,8 +84,14 @@ void Mouse(int button, int state, int x, int y) {
 void specialKeyCallback(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_UP:
+	{
+		cameraPos.x += 0.1;
+		cameraPos.z += 0.1;
+	}
 		break;
 	case GLUT_KEY_DOWN:
+		cameraPos.x -= 0.1;
+		cameraPos.z -= 0.1;
 		break;
 	case GLUT_KEY_LEFT:
 		break;
@@ -155,6 +161,7 @@ GLvoid drawScene()
 	glm::vec3 newColor(0.0f, 0.0f, 0.0f);
 
 	glm::mat4 mTransform = glm::mat4(1.0f);
+	mTransform = glm::rotate(mTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &mTransform[0][0]);
 
 	glm::mat4 vTransform = glm::mat4(1.0f);
