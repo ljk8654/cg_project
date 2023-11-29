@@ -4,9 +4,10 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+// git branch dev
+#include <vector>
 // 필요한 헤더 include 따로 추가하셔야 합니다~
 
-// git branch dev
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
@@ -24,6 +25,12 @@ float light_x = 7;
 float light_y = 10;
 float light_z = 10;
 float zcamera;
+
+struct Vertices {
+	glm::vec3 pos;
+	glm::vec3 nor;
+};
+std::vector<Vertices> m_vertices;
 
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -53,7 +60,10 @@ void make_fragmentShaders();
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 void InitBuffer();
+void UpdateBuffer();
 char* filetobuf(const char*);
+void ReadObj(const char* fileName);
+
 bool left_button;
 
 void timerfunc(int value) {
@@ -145,6 +155,9 @@ GLvoid drawScene()
 	//--- 렌더링 파이프라인에 세이더 불러오기
 
 
+	ReadObj("cube.obj");
+
+
 	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0); //--- 카메라 바라보는 방향
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	//--- 사용할 VAO 불러오기
@@ -184,18 +197,14 @@ GLvoid drawScene()
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
 
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
-	newColor.r = 1.0;newColor.g = 1.0;newColor.b = 1.0;
+	newColor.r = 1.0; newColor.g = 1.0; newColor.b = 1.0;
 	box = box * box_scale;
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box));
 
+	UpdateBuffer();
 
 	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-
-
-
+	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 
 	glutSwapBuffers();
 
@@ -215,10 +224,11 @@ void InitBuffer()
 	glGenBuffers(1, &vbo[0]);
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); //--- 위치 속성
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertices), &m_vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices), (void*)0); //--- 위치 속성
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); //--- 노말 속성
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices), (void*)offsetof(Vertices, nor)); //--- 노말 속성
 	glEnableVertexAttribArray(1);
 
 
@@ -231,6 +241,13 @@ void InitBuffer()
 	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos"); //--- viewPos 값 전달: 카메라 위치
 	glUniform3f(viewPosLocation, cameraPos.x, cameraPos.y, cameraPos.z);
 
+}
+
+void UpdateBuffer()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);		// Position Color
+	if (!m_vertices.empty())
+		glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertices), &m_vertices.front(), GL_STATIC_DRAW);
 }
 
 void make_shaderProgram()
@@ -309,7 +326,80 @@ char* filetobuf(const char* file)
 	return buf; // Return the buffer 
 }
 
+void ReadObj(const char* fileName)
+{
+	FILE* fp = fopen(fileName, "r");
 
+	if (fp == NULL) {
+		std::cerr << "Invalid Object File!!\n";
+		exit(100);
+	}
+
+	char buff[100];
+	int faceNum = 0;
+	std::vector<glm::vec3> vtx;
+	std::vector<glm::vec3> nor;
+	std::vector<glm::vec2> tex;
+
+	while (!feof(fp)) {
+		if (fscanf(fp, "%s", buff) == 3) printf("hello it's 3");
+
+		// vertex or element buffer
+		if (buff[0] == 'v' && buff[1] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
+			vtx.push_back(pos);
+		}
+		// vertex normal
+		else if (buff[0] == 'v' && buff[1] == 'n' && buff[2] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
+			nor.push_back(pos);
+		}
+		// vertex texture coordinate
+		else if (buff[0] == 'v' && buff[1] == 't' && buff[2] == '\0') {
+			glm::vec2 pos;
+			float temp;
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &temp) != 3) exit(1);
+			tex.push_back(pos);
+		}
+		else if (buff[0] == 'f' && buff[1] == '\0') {
+			Vertices temp;
+			int v, t, n;
+			if (fscanf(fp, "%d//%d", &v, &n) != 2) exit(1);
+			temp.pos = vtx[v - 1];
+			temp.nor = nor[n - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+			// 이게 push_back이 하나로 바뀌어야함
+
+			if (fscanf(fp, "%d//%d", &v, &n) != 2) exit(1);
+			temp.pos = vtx[v - 1];
+			temp.nor = nor[n - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+
+			if (fscanf(fp, "%d//%d", &v, &n) != 2) exit(1);
+			temp.pos = vtx[v - 1];
+			temp.nor = nor[n - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+		}
+
+		memset(buff, NULL, sizeof(buff));
+	}
+
+	//for (int i = 0; i < faceNum * 3; ++i) {
+	//	m_iElementBuffer[i]--;
+	//}
+
+
+	vtx.clear();
+	nor.clear();
+	tex.clear();
+
+	fclose(fp);
+}
 
 
 //--- out_Color: 버텍스 세이더에서 입력받는 색상 값
