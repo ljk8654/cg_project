@@ -155,7 +155,7 @@ GLvoid drawScene()
 	//--- 렌더링 파이프라인에 세이더 불러오기
 
 
-	ReadObj("cube.obj");
+	ReadObj("sphere.obj");
 
 
 	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0); //--- 카메라 바라보는 방향
@@ -366,20 +366,20 @@ void ReadObj(const char* fileName)
 		else if (buff[0] == 'f' && buff[1] == '\0') {
 			Vertices temp;
 			int v, t, n;
-			if (fscanf(fp, "%d//%d", &v, &n) != 2) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 			// 이게 push_back이 하나로 바뀌어야함
 
-			if (fscanf(fp, "%d//%d", &v, &n) != 2) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
-			if (fscanf(fp, "%d//%d", &v, &n) != 2) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
