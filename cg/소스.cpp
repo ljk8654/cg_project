@@ -65,11 +65,21 @@ char* filetobuf(const char*);
 void ReadObj(const char* fileName);
 
 bool left_button;
+bool spacebar;
+float zspherespeed = 0.01f;
+float xspherespeed = 0.01f;
+glm::vec3 Tsphere;
 
 void timerfunc(int value) {
 
-	glutTimerFunc(100, timerfunc, 1);
+	if (!spacebar) {		// 스페가 안눌렸었다면 true
+		Tsphere = glm::vec3(xspherespeed, 0.f, zspherespeed += 0.01f);
+	}
+	else {					// 스페가 눌렸었다면 false;
+		Tsphere = glm::vec3(xspherespeed += 0.01f, 0.f, zspherespeed);
+	}
 	glutPostRedisplay();
+	glutTimerFunc(10000, timerfunc, 1);
 
 }
 
@@ -116,6 +126,16 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 
 	switch (key)
 	{
+	case 32:
+	{
+		if (!spacebar) {		// 스페가 안눌렸었다면 true
+			spacebar = true;
+		}
+		else {					// 스페가 눌렸었다면 false;
+			spacebar = false;
+		}
+	}
+	break;
 	}
 	glutPostRedisplay();
 
@@ -154,7 +174,8 @@ GLvoid drawScene()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
 
-
+	glUseProgram(shaderProgramID);
+	glBindVertexArray(vao);
 	ReadObj("sphere.obj");
 
 
@@ -164,6 +185,7 @@ GLvoid drawScene()
 	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
+	glm::mat4 Sc = glm::mat4(1.0f);
 	glm::mat4 box = glm::mat4(1.0f);
 	glm::mat4 box_scale = glm::mat4(1.0f);
 
@@ -174,8 +196,13 @@ GLvoid drawScene()
 	glm::vec3 newColor(0.0f, 0.0f, 0.0f);
 
 	glm::mat4 mTransform = glm::mat4(1.0f);
-	mTransform = glm::rotate(mTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &mTransform[0][0]);
+	Tx = glm::translate(glm::mat4(1.0f), Tsphere);
+	Rz = glm::rotate(mTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	Sc = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.2, 0.2));
+
+	mTransform = Sc*Tx;
+
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
 	glm::mat4 vTransform = glm::mat4(1.0f);
 	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
@@ -194,12 +221,14 @@ GLvoid drawScene()
 		glUniform3f(lightPosLoc, lightPosInModelSpace.x, lightPosInModelSpace.y, lightPosInModelSpace.z);
 
 	}
-	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
+	//box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
 
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 	newColor.r = 1.0; newColor.g = 1.0; newColor.b = 1.0;
-	box = box * box_scale;
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box));
+	//box = box * box_scale;
+	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box));
+
+	timerfunc(10);
 
 	UpdateBuffer();
 
@@ -371,7 +400,6 @@ void ReadObj(const char* fileName)
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
-			// 이게 push_back이 하나로 바뀌어야함
 
 			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
 			temp.pos = vtx[v - 1];
@@ -388,10 +416,6 @@ void ReadObj(const char* fileName)
 
 		memset(buff, NULL, sizeof(buff));
 	}
-
-	//for (int i = 0; i < faceNum * 3; ++i) {
-	//	m_iElementBuffer[i]--;
-	//}
 
 
 	vtx.clear();
