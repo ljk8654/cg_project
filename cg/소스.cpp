@@ -6,13 +6,12 @@
 #include <math.h>
 // 필요한 헤더 include 따로 추가하셔야 합니다~
 
-#include <gl/glew.h>
-#include <gl/freeglut.h>
-#include <gl/freeglut_ext.h>
-#include <gl/glm/glm/glm.hpp>
-
-#include <gl/glm/glm/ext.hpp>
-#include <gl/glm/glm/gtc/matrix_transform.hpp>
+#include "myGL/glew.h"
+#include "myGL/freeglut.h"
+#include "myGL/freeglut_ext.h"
+#include "myGL/glm/glm.hpp"
+#include "myGL/glm/ext.hpp"
+#include  "myGL/glm/gtc/matrix_transform.hpp"
 
 //--- 메인 함수
 //--- 함수 선언 추가하기
@@ -189,7 +188,8 @@ GLvoid drawScene()
 
 
 
-	glutSwapBuffers();
+	glutSwapBuffers();
+
 }
 
 //--- 다시그리기 콜백 함수
