@@ -19,12 +19,15 @@
 //--- 메인 함수
 //--- 함수 선언 추가하기
 
-glm::vec3 cameraPos = glm::vec3(-0.25, +1.0, -1); //--- 카메라 위치
+glm::vec3 cameraPos = glm::vec3(-0.25, +1.0, +1); //--- 카메라 위치
 
 float light_x = 7;
 float light_y = 10;
 float light_z = 10;
 float zcamera;
+int road_count = 500;
+float road_x_move[500];
+float road_y_move[500];
 
 struct Vertices {
 	glm::vec3 pos;
@@ -47,7 +50,7 @@ float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
 };
 
-GLuint vao, vbo[2], line_vao, line_vbo[2], ebo, fvao, febo, fvbo[2], obit_vao, obit_vbo[2], obit_ebo, con_vao, con_vbo[2];
+GLuint vao, vbo[2], map_vao, map_vbo[2];
 GLuint TriPosVbo[15], TriColorVbo[15];
 
 GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
@@ -61,6 +64,7 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 void InitBuffer();
 void UpdateBuffer();
+void make_map();
 char* filetobuf(const char*);
 void ReadObj(const char* fileName);
 
@@ -108,7 +112,7 @@ void specialKeyCallback(int key, int x, int y) {
 		cameraPos.x += 0.1;
 		cameraPos.z += 0.1;
 	}
-		break;
+	break;
 	case GLUT_KEY_DOWN:
 		cameraPos.x -= 0.1;
 		cameraPos.z -= 0.1;
@@ -186,9 +190,14 @@ GLvoid drawScene()
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box = glm::mat4(1.0f);
-	glm::mat4 box_scale = glm::mat4(1.0f);
+	glm::mat4 box[500] = { glm::mat4(1.0f) };
 
+	glm::mat4 box_scale = glm::mat4(1.0f);
+	glm::mat4 map_move[500] = { glm::mat4(1.0f) };
+	for (int i = 0; i < 500; i++) {
+		map_move[i] = glm::mat4(1.0f);
+		box[i] = glm::mat4(1.0f);
+	}
 	GLuint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	GLuint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLuint projLoc = glGetUniformLocation(shaderProgramID, "projection");
@@ -200,7 +209,7 @@ GLvoid drawScene()
 	Rz = glm::rotate(mTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	Sc = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.2, 0.2));
 
-	mTransform = Sc*Tx;
+	mTransform = Sc * Tx;
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
@@ -231,9 +240,18 @@ GLvoid drawScene()
 	timerfunc(10);
 
 	UpdateBuffer();
-
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
+	glBindVertexArray(map_vao);
+	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
+	for (int i = 0; i < 500; i++) {
+		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], 0, road_y_move[i]));
+
+		box[i] = map_move[i] * box_scale;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	}
 
 	glutSwapBuffers();
 
@@ -247,6 +265,7 @@ GLvoid Reshape(int w, int h)
 
 void InitBuffer()
 {
+	make_map();
 
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
@@ -260,6 +279,15 @@ void InitBuffer()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices), (void*)offsetof(Vertices, nor)); //--- 노말 속성
 	glEnableVertexAttribArray(1);
 
+	glGenVertexArrays(1, &map_vao);
+	glGenBuffers(1, &map_vbo[0]);
+	glBindVertexArray(map_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, map_vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); //--- 위치 속성
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); //--- 노말 속성
+	glEnableVertexAttribArray(1);
 
 	glUseProgram(shaderProgramID);
 
@@ -425,6 +453,18 @@ void ReadObj(const char* fileName)
 	fclose(fp);
 }
 
+void make_map() {
+	float road_volume = 0.2;
+	int x_inc_count = 0;
+	int y_inc_count = 0;
+	for (int i = 0; i < road_count; i++) {
+		road_x_move[i] = x_inc_count * road_volume;
+		road_y_move[i] = -y_inc_count * road_volume;
+		int r = rand() % 2;
+		if (r == 0) x_inc_count++;
+		else y_inc_count++;
+	}
+}
 
 //--- out_Color: 버텍스 세이더에서 입력받는 색상 값
 //--- FragColor: 출력할 색상의 값으로 프레임 버퍼로 전달 됨.
