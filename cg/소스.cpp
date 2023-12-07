@@ -66,17 +66,34 @@ void ReadObj(const char* fileName);
 
 bool left_button;
 bool spacebar;
+bool jump;
 float zspherespeed = 0.01f;
 float xspherespeed = 0.01f;
+float yspherespeed = 0.f;
+float yDir = 1.f;
 glm::vec3 Tsphere;
 
 void timerfunc(int value) {
 
 	if (!spacebar) {		// 스페가 안눌렸었다면 true
-		Tsphere = glm::vec3(xspherespeed, 0.f, zspherespeed += 0.01f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed, zspherespeed += 0.01f);
 	}
 	else {					// 스페가 눌렸었다면 false;
-		Tsphere = glm::vec3(xspherespeed += 0.01f, 0.f, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.01f, yspherespeed, zspherespeed);
+	}
+	
+	if (jump && (yDir > 0.f)) {		// 증가값이 일정값 넘으면 역방향
+		Tsphere = glm::vec3(xspherespeed, yspherespeed += 0.02f * yDir, zspherespeed);
+		if (yspherespeed > 0.5f)
+			yDir *= -1;
+	}
+	else if (jump && (yDir < 0.f)) {
+		Tsphere = glm::vec3(xspherespeed, yspherespeed += 0.02f * yDir, zspherespeed);
+		if (yspherespeed < 0.f) {	// 바닥에 닿으면 감소값 멈추기
+			yspherespeed = 0.f;
+			yDir *= -1;
+			jump = false;
+		}
 	}
 	glutPostRedisplay();
 	glutTimerFunc(10000, timerfunc, 1);
@@ -116,6 +133,12 @@ void specialKeyCallback(int key, int x, int y) {
 	case GLUT_KEY_LEFT:
 		break;
 	case GLUT_KEY_RIGHT:
+		break;
+	case GLUT_KEY_CTRL_L:
+		if (!jump) {
+			jump = true;
+		}
+
 		break;
 	}
 	glutPostRedisplay();
