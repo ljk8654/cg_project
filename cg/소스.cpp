@@ -28,6 +28,7 @@ float zcamera;
 int road_count = 500;
 float road_x_move[500];
 float road_y_move[500];
+float road_z_move[500];
 
 struct Vertices {
 	glm::vec3 pos;
@@ -74,8 +75,31 @@ float zspherespeed = 0.01f;
 float xspherespeed = 0.01f;
 glm::vec3 Tsphere;
 
-void timerfunc(int value) {
+bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
+	float rect2_left, float rect2_bottom, float rect2_right, float rect2_top) {
+	// 충돌 검사
+	if ((rect1_left < rect2_right) && (rect1_top < rect2_bottom) && (rect1_right > rect2_left) &&
+		(rect1_bottom > rect2_top)) {
+		printf("222");
 
+		return true;  // 충돌이 있음
+
+	}
+	else {
+		return false;  // 충돌이 없음
+	}
+}
+bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float rect_right, float rect_top) {
+	return (x >= rect_left && x <= rect_right && y >= rect_bottom && y <= rect_top);
+}
+void timerfunc(int value) {
+	for (int i = 0; i < road_count; i++) {
+		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
+			cameraPos.x - 0.6, cameraPos.z - 0.6, cameraPos.x + 0.6, cameraPos.z + 0.6))
+		{
+			road_y_move[i] += 0.002;
+		}
+	}
 	if (!spacebar) {		// 스페가 안눌렸었다면 true
 		Tsphere = glm::vec3(xspherespeed, 0.f, zspherespeed += 0.01f);
 	}
@@ -117,7 +141,8 @@ void specialKeyCallback(int key, int x, int y) {
 		break;
 	case GLUT_KEY_LEFT:
 		cameraPos.x -= 0.1;
-
+		printf("%f %f %f %f %f %f %f %f", cameraPos.x - 2.0, cameraPos.z - 2.0, cameraPos.x + 2.0, cameraPos.z + 2.0,
+			road_x_move[0] - 2.0, road_z_move[0] - 2.0, road_x_move[0] + 2.0, road_z_move[0] + 2.0);
 		break;
 	case GLUT_KEY_RIGHT:
 		cameraPos.x += 0.1;
@@ -184,7 +209,7 @@ GLvoid drawScene()
 	glBindVertexArray(vao);
 
 
-	glm::vec3 cameraDirection = glm::vec3(cameraPos.x + 0.25, cameraPos.y - 1, cameraPos.z - 1); //--- 카메라 바라보는 방향
+	glm::vec3 cameraDirection = glm::vec3(cameraPos.x + 0.25, cameraPos.y - 1.5, cameraPos.z - 1); //--- 카메라 바라보는 방향
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	//--- 사용할 VAO 불러오기
 	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
@@ -246,7 +271,7 @@ GLvoid drawScene()
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
 	for (int i = 0; i < 500; i++) {
-		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], 0, road_y_move[i]));
+		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
 
 		box[i] = map_move[i] * box_scale;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
@@ -263,7 +288,7 @@ GLvoid Reshape(int w, int h)
 {
 	glViewport(0, 0, w, h);
 }
-
+//카메라 위치에 따라서 땅이 올라옴 충돌박스?
 void InitBuffer()
 {
 	make_map();
@@ -457,13 +482,15 @@ void ReadObj(const char* fileName)
 void make_map() {
 	float road_volume = 0.2;
 	int x_inc_count = 0;
-	int y_inc_count = 0;
+	int z_inc_count = 0;
 	for (int i = 0; i < road_count; i++) {
 		road_x_move[i] = x_inc_count * road_volume;
-		road_y_move[i] = -y_inc_count * road_volume;
+		road_y_move[i] = -1.0;
+		road_z_move[i] = -z_inc_count * road_volume;
+
 		int r = rand() % 2;
 		if (r == 0) x_inc_count++;
-		else y_inc_count++;
+		else z_inc_count++;
 	}
 }
 
