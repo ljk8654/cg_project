@@ -109,17 +109,19 @@ void specialKeyCallback(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_UP:
 	{
-		cameraPos.x += 0.1;
-		cameraPos.z += 0.1;
+		cameraPos.z -= 0.1;
 	}
 	break;
 	case GLUT_KEY_DOWN:
-		cameraPos.x -= 0.1;
-		cameraPos.z -= 0.1;
+		cameraPos.z += 0.1;
 		break;
 	case GLUT_KEY_LEFT:
+		cameraPos.x -= 0.1;
+
 		break;
 	case GLUT_KEY_RIGHT:
+		cameraPos.x += 0.1;
+
 		break;
 	}
 	glutPostRedisplay();
@@ -180,10 +182,9 @@ GLvoid drawScene()
 
 	glUseProgram(shaderProgramID);
 	glBindVertexArray(vao);
-	ReadObj("sphere.obj");
 
 
-	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0); //--- 카메라 바라보는 방향
+	glm::vec3 cameraDirection = glm::vec3(cameraPos.x + 0.25, cameraPos.y - 1, cameraPos.z - 1); //--- 카메라 바라보는 방향
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	//--- 사용할 VAO 불러오기
 	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
