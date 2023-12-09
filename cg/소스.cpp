@@ -1,8 +1,18 @@
 #include "std.h"
+#include "transform.h"
 //--- 메인 함수
 //--- 함수 선언 추가하기
 
-glm::vec3 cameraPos = glm::vec3(-0.25, +1.0, +1); //--- 카메라 위치
+GLuint window_w = 1000;
+GLuint window_h = 1000;
+
+unsigned int lightPosLocation;
+unsigned int lightColorLocation;
+unsigned int viewLocation;
+
+glm::vec3 lightPos(7, 10, 10);
+glm::vec3 lightColor(0.8, 0.8, 0.8);
+glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
 
 float light_x = 7;
 float light_y = 10;
@@ -160,7 +170,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutInit(&argc, argv);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(1024, 768);
+	glutInitWindowSize(window_w, window_h);
 	glutCreateWindow("Dancing Lines");
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -187,10 +197,9 @@ GLvoid drawScene()
 	//glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
-
 	glUseProgram(shaderProgramID);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindVertexArray(vao);
-
 
 	glm::vec3 cameraDirection = glm::vec3(cameraPos.x + 0.25, cameraPos.y - 1.5, cameraPos.z - 1); //--- 카메라 바라보는 방향
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -226,12 +235,14 @@ GLvoid drawScene()
 	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 	vTransform = vTransform; //카메라위치 돌리기 앞에두면 카메라 자전, 뒤에 두면 카메라 공전
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
+	
+	perspective(shaderProgramID, 0.0f);
 
-	glm::mat4 pTransform = glm::mat4(1.0f);
-	pTransform = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f); //원근투영
+	//lightPos = glm::vec3(lightPos.x, lightPos.y, lightPos.z);
+	//float light = 1 - abs((ballPos.y-5)/ 140);
+	//lightColor = glm::vec3(lightColor.x, lightColor.y, lightColor.z);
 
-
-	{   //조명 위치
+	 {   //조명 위치
 		glm::vec4 lightPosInModelSpace = glm::vec4(light_x, light_y, light_z, 1.0f);
 		lightPosInModelSpace = lightPosInModelSpace;
 		// 셰이더에 변환된 조명 위치 전달
@@ -239,9 +250,9 @@ GLvoid drawScene()
 		glUniform3f(lightPosLoc, lightPosInModelSpace.x, lightPosInModelSpace.y, lightPosInModelSpace.z);
 
 	}
+
 	//box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
 
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 	newColor.r = 1.0; newColor.g = 1.0; newColor.b = 1.0;
 	//box = box * box_scale;
 	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box));
@@ -306,7 +317,6 @@ void InitBuffer()
 	glUniform3f(objColorLocation, 1.0, 0.5, 0.3);
 	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos"); //--- viewPos 값 전달: 카메라 위치
 	glUniform3f(viewPosLocation, cameraPos.x, cameraPos.y, cameraPos.z);
-
 }
 
 void UpdateBuffer()
