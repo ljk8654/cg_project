@@ -1,21 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS //--- 프로그램 맨 앞에 선언할 것
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <math.h>
-// git branch dev
-#include <vector>
-// 필요한 헤더 include 따로 추가하셔야 합니다~
-
-#include <gl/glew.h>
-#include <gl/freeglut.h>
-#include <gl/freeglut_ext.h>
-#include <gl/glm/glm/glm.hpp>
-
-#include <gl/glm/glm/ext.hpp>
-#include <gl/glm/glm/gtc/matrix_transform.hpp>
-
+#include "std.h"
 //--- 메인 함수
 //--- 함수 선언 추가하기
 
