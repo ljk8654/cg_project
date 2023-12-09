@@ -160,8 +160,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutInit(&argc, argv);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(800, 600);
-	glutCreateWindow("Sphere Example");
+	glutInitWindowSize(1024, 768);
+	glutCreateWindow("Dancing Lines");
 	glewExperimental = GL_TRUE;
 	glewInit();
 	if (glewInit() != GLEW_OK) {
