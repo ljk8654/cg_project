@@ -19,12 +19,16 @@
 //--- 메인 함수
 //--- 함수 선언 추가하기
 
-glm::vec3 cameraPos = glm::vec3(-0.25, +1.0, -1); //--- 카메라 위치
+glm::vec3 cameraPos = glm::vec3(-0.25, +1.0, +1); //--- 카메라 위치
 
 float light_x = 7;
 float light_y = 10;
 float light_z = 10;
 float zcamera;
+int road_count = 500;
+float road_x_move[500];
+float road_y_move[500];
+float road_z_move[500];
 
 struct Vertices {
 	glm::vec3 pos;
@@ -47,7 +51,7 @@ float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
 };
 
-GLuint vao, vbo[2], line_vao, line_vbo[2], ebo, fvao, febo, fvbo[2], obit_vao, obit_vbo[2], obit_ebo, con_vao, con_vbo[2];
+GLuint vao, vbo[2], map_vao, map_vbo[2];
 GLuint TriPosVbo[15], TriColorVbo[15];
 
 GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
@@ -61,6 +65,7 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 void InitBuffer();
 void UpdateBuffer();
+void make_map();
 char* filetobuf(const char*);
 void ReadObj(const char* fileName);
 
@@ -73,8 +78,31 @@ float yspherespeed = 0.f;
 float yDir = 1.f;
 glm::vec3 Tsphere;
 
-void timerfunc(int value) {
+bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
+	float rect2_left, float rect2_bottom, float rect2_right, float rect2_top) {
+	// 충돌 검사
+	if ((rect1_left < rect2_right) && (rect1_top < rect2_bottom) && (rect1_right > rect2_left) &&
+		(rect1_bottom > rect2_top)) {
+		printf("222");
 
+		return true;  // 충돌이 있음
+
+	}
+	else {
+		return false;  // 충돌이 없음
+	}
+}
+bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float rect_right, float rect_top) {
+	return (x >= rect_left && x <= rect_right && y >= rect_bottom && y <= rect_top);
+}
+void timerfunc(int value) {
+	for (int i = 0; i < road_count; i++) {
+		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
+			cameraPos.x - 0.6, cameraPos.z - 0.6, cameraPos.x + 0.6, cameraPos.z + 0.6))
+		{
+			road_y_move[i] += 0.002;
+		}
+	}
 	if (!spacebar) {		// 스페가 안눌렸었다면 true
 		Tsphere = glm::vec3(xspherespeed, yspherespeed, zspherespeed += 0.01f);
 	}
@@ -122,17 +150,20 @@ void specialKeyCallback(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_UP:
 	{
-		cameraPos.x += 0.1;
-		cameraPos.z += 0.1;
-	}
-		break;
-	case GLUT_KEY_DOWN:
-		cameraPos.x -= 0.1;
 		cameraPos.z -= 0.1;
+	}
+	break;
+	case GLUT_KEY_DOWN:
+		cameraPos.z += 0.1;
 		break;
 	case GLUT_KEY_LEFT:
+		cameraPos.x -= 0.1;
+		printf("%f %f %f %f %f %f %f %f", cameraPos.x - 2.0, cameraPos.z - 2.0, cameraPos.x + 2.0, cameraPos.z + 2.0,
+			road_x_move[0] - 2.0, road_z_move[0] - 2.0, road_x_move[0] + 2.0, road_z_move[0] + 2.0);
 		break;
 	case GLUT_KEY_RIGHT:
+		cameraPos.x += 0.1;
+
 		break;
 	case GLUT_KEY_CTRL_L:
 		if (!jump) {
@@ -199,19 +230,23 @@ GLvoid drawScene()
 
 	glUseProgram(shaderProgramID);
 	glBindVertexArray(vao);
-	ReadObj("sphere.obj");
 
 
-	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0); //--- 카메라 바라보는 방향
+	glm::vec3 cameraDirection = glm::vec3(cameraPos.x + 0.25, cameraPos.y - 1.5, cameraPos.z - 1); //--- 카메라 바라보는 방향
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	//--- 사용할 VAO 불러오기
 	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box = glm::mat4(1.0f);
-	glm::mat4 box_scale = glm::mat4(1.0f);
+	glm::mat4 box[500] = { glm::mat4(1.0f) };
 
+	glm::mat4 box_scale = glm::mat4(1.0f);
+	glm::mat4 map_move[500] = { glm::mat4(1.0f) };
+	for (int i = 0; i < 500; i++) {
+		map_move[i] = glm::mat4(1.0f);
+		box[i] = glm::mat4(1.0f);
+	}
 	GLuint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	GLuint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLuint projLoc = glGetUniformLocation(shaderProgramID, "projection");
@@ -223,7 +258,7 @@ GLvoid drawScene()
 	Rz = glm::rotate(mTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	Sc = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.2, 0.2));
 
-	mTransform = Sc*Tx;
+	mTransform = Sc * Tx;
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
@@ -254,9 +289,18 @@ GLvoid drawScene()
 	timerfunc(10);
 
 	UpdateBuffer();
-
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
+	glBindVertexArray(map_vao);
+	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
+	for (int i = 0; i < 500; i++) {
+		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
+
+		box[i] = map_move[i] * box_scale;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	}
 
 	glutSwapBuffers();
 
@@ -267,9 +311,10 @@ GLvoid Reshape(int w, int h)
 {
 	glViewport(0, 0, w, h);
 }
-
+//카메라 위치에 따라서 땅이 올라옴 충돌박스?
 void InitBuffer()
 {
+	make_map();
 
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
@@ -283,6 +328,15 @@ void InitBuffer()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices), (void*)offsetof(Vertices, nor)); //--- 노말 속성
 	glEnableVertexAttribArray(1);
 
+	glGenVertexArrays(1, &map_vao);
+	glGenBuffers(1, &map_vbo[0]);
+	glBindVertexArray(map_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, map_vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); //--- 위치 속성
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); //--- 노말 속성
+	glEnableVertexAttribArray(1);
 
 	glUseProgram(shaderProgramID);
 
@@ -448,6 +502,20 @@ void ReadObj(const char* fileName)
 	fclose(fp);
 }
 
+void make_map() {
+	float road_volume = 0.2;
+	int x_inc_count = 0;
+	int z_inc_count = 0;
+	for (int i = 0; i < road_count; i++) {
+		road_x_move[i] = x_inc_count * road_volume;
+		road_y_move[i] = -1.0;
+		road_z_move[i] = -z_inc_count * road_volume;
+
+		int r = rand() % 2;
+		if (r == 0) x_inc_count++;
+		else z_inc_count++;
+	}
+}
 
 //--- out_Color: 버텍스 세이더에서 입력받는 색상 값
 //--- FragColor: 출력할 색상의 값으로 프레임 버퍼로 전달 됨.
