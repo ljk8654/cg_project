@@ -11,7 +11,7 @@
 #include "myGL/freeglut_ext.h"
 #include "myGL/glm/glm.hpp"
 #include "myGL/glm/ext.hpp"
-#include  "myGL/glm/gtc/matrix_transform.hpp"
+#include "myGL/glm/gtc/matrix_transform.hpp"
 
 //--- 메인 함수
 //--- 함수 선언 추가하기
