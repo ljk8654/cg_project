@@ -102,33 +102,37 @@ void timerfunc(int value) {
 	}
 
 	if (!spacebar) {		// 스페가 안눌렸었다면 true
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.01f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.0001f);
 	}
 	else {					// 스페가 눌렸었다면 false;
-		Tsphere = glm::vec3(xspherespeed += 0.01f, yspherespeed -= gravity, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.0001f, yspherespeed -= gravity, zspherespeed);
 	}
-	if (yspherespeed < -0.5f)
-		yspherespeed = -0.5f;
+	for (int i = 0; i < road_count; ++i) {
+		if (yspherespeed < )
+			yspherespeed = road_y_move[i] - 1.f;
+	}
+
+	std::cout << "y구 - " << yspherespeed << " 맵y - " << road_y_move[0] << '\n';
+
+	//box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
+	//for (int i = 0; i < 500; i++) {
+	//	map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
+
+	//	box[i] = map_move[i] * box_scale;
+	//	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
 
 	if (jump) {		// 증가값이 일정값 넘으면 역방향
 		Tsphere = glm::vec3(xspherespeed, yspherespeed += (power * fTime - (gravity * (fTime * fTime))) * 0.5f, zspherespeed);
-		fTime += fTime2;
-		fTime2 -= 0.01f;
+		fTime += 0.04;
 		std::cout << yspherespeed << '\t' << (power * fTime - (gravity * (fTime * fTime))) << '\n';
-		if (yspherespeed < -0.5f) {
-			yspherespeed = -0.5f;
-			jump = false;
-			fTime = 0.f;
+		for (int i = 0; i < road_count; ++i) {
+			if (yspherespeed < road_y_move[i] - 1.f) {
+				yspherespeed = road_y_move[i] - 1.f;
+				jump = false;
+				fTime = 0.f;
+			}
 		}
 	}
-	//else if (jump && (yDir < 0.f)) {
-	//	Tsphere = glm::vec3(xspherespeed, yspherespeed += 0.02f * yDir, zspherespeed);
-	//	if (yspherespeed < 0.f) {	// 바닥에 닿으면 감소값 멈추기
-	//		yspherespeed = 0.f;
-	//		yDir *= -1;
-	//		jump = false;
-	//	}
-	//}
 
 	glutPostRedisplay();
 	//if(spacebar)
@@ -177,7 +181,12 @@ void specialKeyCallback(int key, int x, int y) {
 		if (!jump) {
 			jump = true;
 		}
-
+		break;
+	case GLUT_KEY_PAGE_DOWN:
+		cameraPos.y -= 0.01;
+		break;
+	case GLUT_KEY_PAGE_UP:
+		cameraPos.y += 0.01;
 		break;
 	}
 	glutPostRedisplay();
@@ -265,10 +274,10 @@ GLvoid drawScene()
 	glm::mat4 mTransform = glm::mat4(1.0f);
 	Tx = glm::translate(glm::mat4(1.0f), Tsphere);
 	Rz = glm::rotate(mTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	Sc = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.2, 0.2));
+	Sc = glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.1));
 
 	mTransform = Sc * Tx;
-
+	
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
 	glm::mat4 vTransform = glm::mat4(1.0f);
