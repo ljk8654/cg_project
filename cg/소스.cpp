@@ -1,5 +1,7 @@
 #include "std.h"
 #include "transform.h"
+#include "Sound.h"
+
 //--- 메인 함수
 //--- 함수 선언 추가하기
 
@@ -67,6 +69,8 @@ bool spacebar;
 float zspherespeed = 0.01f;
 float xspherespeed = 0.01f;
 glm::vec3 Tsphere;
+
+SoundManager* soundManager = nullptr;
 
 bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
 	float rect2_left, float rect2_bottom, float rect2_right, float rect2_top) {
@@ -183,6 +187,9 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutKeyboardFunc(Keyboard);
 	glutSpecialFunc(specialKeyCallback);
 	glutDisplayFunc(drawScene);
+
+	soundManager = new SoundManager();
+	soundManager->PlayBGMSound(BGMSound::Normal, 0.2f, GL_TRUE);
 
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 	glutMainLoop();
