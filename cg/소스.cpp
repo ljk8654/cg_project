@@ -72,10 +72,14 @@ void ReadObj(const char* fileName);
 bool left_button;
 bool spacebar;
 bool jump;
+bool floortouch = false;
 float zspherespeed = 0.01f;
 float xspherespeed = 0.01f;
 float yspherespeed = 0.f;
-float yDir = 1.f;
+float gravity = 0.0098f;
+float power = 0.2f;
+float fTime = 1.f;
+float fTime2 = 1.f;
 glm::vec3 Tsphere;
 
 bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
@@ -103,28 +107,39 @@ void timerfunc(int value) {
 			road_y_move[i] += 0.002;
 		}
 	}
+
 	if (!spacebar) {		// 스페가 안눌렸었다면 true
-		Tsphere = glm::vec3(xspherespeed, yspherespeed, zspherespeed += 0.01f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.01f);
 	}
 	else {					// 스페가 눌렸었다면 false;
-		Tsphere = glm::vec3(xspherespeed += 0.01f, yspherespeed, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.01f, yspherespeed -= gravity, zspherespeed);
 	}
-	
-	if (jump && (yDir > 0.f)) {		// 증가값이 일정값 넘으면 역방향
-		Tsphere = glm::vec3(xspherespeed, yspherespeed += 0.02f * yDir, zspherespeed);
-		if (yspherespeed > 0.5f)
-			yDir *= -1;
-	}
-	else if (jump && (yDir < 0.f)) {
-		Tsphere = glm::vec3(xspherespeed, yspherespeed += 0.02f * yDir, zspherespeed);
-		if (yspherespeed < 0.f) {	// 바닥에 닿으면 감소값 멈추기
-			yspherespeed = 0.f;
-			yDir *= -1;
+	if (yspherespeed < -0.5f)
+		yspherespeed = -0.5f;
+
+	if (jump) {		// 증가값이 일정값 넘으면 역방향
+		Tsphere = glm::vec3(xspherespeed, yspherespeed += (power * fTime - (gravity * (fTime * fTime))) * 0.5f, zspherespeed);
+		fTime += fTime2;
+		fTime2 -= 0.01f;
+		std::cout << yspherespeed << '\t' << (power * fTime - (gravity * (fTime * fTime))) << '\n';
+		if (yspherespeed < -0.5f) {
+			yspherespeed = -0.5f;
 			jump = false;
+			fTime = 0.f;
 		}
 	}
+	//else if (jump && (yDir < 0.f)) {
+	//	Tsphere = glm::vec3(xspherespeed, yspherespeed += 0.02f * yDir, zspherespeed);
+	//	if (yspherespeed < 0.f) {	// 바닥에 닿으면 감소값 멈추기
+	//		yspherespeed = 0.f;
+	//		yDir *= -1;
+	//		jump = false;
+	//	}
+	//}
+
 	glutPostRedisplay();
-	glutTimerFunc(10000, timerfunc, 1);
+	//if(spacebar)
+		//glutTimerFunc(100, timerfunc, 1);
 
 }
 
@@ -213,6 +228,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutKeyboardFunc(Keyboard);
 	glutSpecialFunc(specialKeyCallback);
 	glutDisplayFunc(drawScene);
+
+	ReadObj("sphere.obj");
 
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 	glutMainLoop();
