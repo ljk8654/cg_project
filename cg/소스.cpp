@@ -243,7 +243,10 @@ GLvoid drawScene()
 	glm::mat4 map_move[300] = { glm::mat4(1.0f) };
 	glm::mat4 snow_obj[100] = { glm::mat4(1.0f) };
 	glm::mat4 snow_scale = glm::mat4(1.0f);
+	glm::mat4 obj_scale = glm::mat4(1.0f);
 	glm::mat4 snow_move[100] = { glm::mat4(1.0f) };
+	glm::mat4 Oobj = glm::mat4(1.0f);
+
 
 	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::mat4(1.0f);
@@ -300,6 +303,12 @@ GLvoid drawScene()
 
 	UpdateBuffer();
 	glBindVertexArray(vao);
+	glUniform3f(objColorLocation, 0.7, 0.7, 0.0);
+	Oobj = glm::translate(Oobj, glm::vec3(0, 0.0, 0));
+	obj_scale = glm::scale(obj_scale, glm::vec3(0.2, 0.2, 0.2));
+
+	Oobj *= obj_scale;
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Oobj));
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
@@ -336,7 +345,7 @@ void InitBuffer()
 {
 	make_map();
 	for(int i=0; i< 100; i++) make_snow(i);
-
+	ReadObj("mushroom.obj");
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo[0]);
@@ -480,32 +489,31 @@ void ReadObj(const char* fileName)
 		// vertex normal
 		else if (buff[0] == 'v' && buff[1] == 'n' && buff[2] == '\0') {
 			glm::vec3 pos;
-			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(2);
 			nor.push_back(pos);
 		}
 		// vertex texture coordinate
 		else if (buff[0] == 'v' && buff[1] == 't' && buff[2] == '\0') {
 			glm::vec2 pos;
-			float temp;
-			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &temp) != 3) exit(1);
+			if (fscanf(fp, "%f %f", &pos.x, &pos.y) != 2) exit(6);
 			tex.push_back(pos);
 		}
 		else if (buff[0] == 'f' && buff[1] == '\0') {
 			Vertices temp;
 			int v, t, n;
-			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(5);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
-			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(7);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
-			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(8);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
