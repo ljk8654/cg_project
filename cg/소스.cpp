@@ -302,12 +302,13 @@ GLvoid drawScene()
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
-	glUniform3f(objColorLocation, 0.7, 0.7, 0.7);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
 	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
 		box[i] = map_move[i] * box_scale;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
+		if(i % 100 == 38) glUniform3f(objColorLocation, 0.0, 0.0, 0.0);
+		else glUniform3f(objColorLocation, 0.7, 0.7, 0.7);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 
