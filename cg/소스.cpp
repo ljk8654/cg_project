@@ -80,6 +80,8 @@ void UpdateBuffer();
 void make_map();
 char* filetobuf(const char*);
 void ReadObj(const char* fileName);
+void ReadObj2(const char* fileName);
+
 
 bool left_button;
 bool spacebar;
@@ -212,6 +214,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	soundManager = new SoundManager();
 	soundManager->PlayBGMSound(BGMSound::Normal, 0.2f, GL_TRUE);
+	ReadObj2("bed.obj");
 
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 	glutMainLoop();
@@ -345,7 +348,7 @@ void InitBuffer()
 {
 	make_map();
 	for(int i=0; i< 100; i++) make_snow(i);
-	ReadObj("mushroom.obj");
+	//ReadObj("mushroom.obj");
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo[0]);
@@ -531,6 +534,75 @@ void ReadObj(const char* fileName)
 	fclose(fp);
 } 
 
+
+void ReadObj2(const char* fileName)
+{
+	FILE* fp = fopen(fileName, "r");
+
+	if (fp == NULL) {
+		std::cerr << "Invalid Object File!!\n";
+		exit(100);
+	}
+
+	char buff[100];
+	int faceNum = 0;
+	std::vector<glm::vec3> vtx;
+	std::vector<glm::vec3> nor;
+	std::vector<glm::vec3> tex;
+
+	while (!feof(fp)) {
+		if (fscanf(fp, "%s", buff) == 3) printf("hello it's 3");
+
+		// vertex or element buffer
+		if (buff[0] == 'v' && buff[1] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
+			vtx.push_back(pos);
+		}
+		// vertex normal
+		else if (buff[0] == 'v' && buff[1] == 'n' && buff[2] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(2);
+			nor.push_back(pos);
+		}
+		// vertex texture coordinate
+		else if (buff[0] == 'v' && buff[1] == 't' && buff[2] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f", &pos.x, &pos.y) != 2) exit(6);
+			tex.push_back(pos);
+		}
+		else if (buff[0] == 'f' && buff[1] == '\0') {
+			Vertices temp;
+			int v, t, n;
+			if (fscanf(fp, "%d/%d", &v, &t) != 2) exit(5);
+			temp.pos = vtx[v - 1];
+			temp.nor = tex[t - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+
+			if (fscanf(fp, "%d/%d", &v, &n) != 2) exit(7);
+			temp.pos = vtx[v - 1];
+			temp.nor = tex[n - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+
+			if (fscanf(fp, "%d/%d", &v, &n) != 2) exit(8);
+			temp.pos = vtx[v - 1];
+			temp.nor = tex[n - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+		}
+
+		memset(buff, NULL, sizeof(buff));
+	}
+
+
+	vtx.clear();
+	nor.clear();
+	tex.clear();
+
+	fclose(fp);
+}
 void make_map() {
 	float road_volume = 0.2;
 	int x_inc_count = 0;
