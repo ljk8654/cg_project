@@ -107,10 +107,10 @@ void timerfunc(int value) {
 	else {					// 스페가 눌렸었다면 false;
 		Tsphere = glm::vec3(xspherespeed += 0.0001f, yspherespeed -= gravity, zspherespeed);
 	}
-	for (int i = 0; i < road_count; ++i) {
+	/*for (int i = 0; i < road_count; ++i) {
 		if (yspherespeed < )
 			yspherespeed = road_y_move[i] - 1.f;
-	}
+	}*/
 
 	std::cout << "y구 - " << yspherespeed << " 맵y - " << road_y_move[0] << '\n';
 
@@ -232,6 +232,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene);
 
 	ReadObj("sphere.obj");
+	//ReadObj("nescafe_mug.obj");
 
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 	glutMainLoop();
@@ -484,8 +485,7 @@ void ReadObj(const char* fileName)
 		// vertex texture coordinate
 		else if (buff[0] == 'v' && buff[1] == 't' && buff[2] == '\0') {
 			glm::vec2 pos;
-			float temp;
-			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &temp) != 3) exit(1);
+			if (fscanf(fp, "%f %f", &pos.x, &pos.y) != 2) exit(1);
 			tex.push_back(pos);
 		}
 		else if (buff[0] == 'f' && buff[1] == '\0') {
@@ -507,6 +507,11 @@ void ReadObj(const char* fileName)
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
+			temp.pos = vtx[v - 1];
+			temp.nor = nor[n - 1];
 			m_vertices.push_back(temp);
 		}
 
