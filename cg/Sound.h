@@ -8,7 +8,7 @@ enum class SoundChannel { Bgm = 0, Fire, Effect, Walk, _count };
 
 // has Channel
 constexpr GLuint NUM_SOUND_BGM = static_cast<GLuint>(BGMSound::_count);
-constexpr GLuint NUM_SOUND_CHEENEL = static_cast<GLuint>(SoundChannel::_count);;
+constexpr GLuint NUM_SOUND_CHEENEL = static_cast<GLuint>(SoundChannel::_count);
 
 // Stop은 Play후에 사용할 것
 class SoundManager {
