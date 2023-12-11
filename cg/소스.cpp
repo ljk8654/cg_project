@@ -31,6 +31,23 @@ struct Vertices {
 };
 std::vector<Vertices> m_vertices;
 
+struct Snow {
+	float x, y, z;
+	float fast;
+};
+
+Snow snow[100];
+
+void make_snow(int i) {
+
+		snow[i].x = cameraPos.x + float(rand() % 10) / 10 - 0.5;
+		snow[i].z = cameraPos.z + float(rand() % 10) / 10 - 0.5;
+		snow[i].y = 1.0;
+		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
+	
+
+}
+
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -90,6 +107,13 @@ bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float r
 	return (x >= rect_left && x <= rect_right && y >= rect_bottom && y <= rect_top);
 }
 void timerfunc(int value) {
+
+	//눈 내리기
+	for (int i = 0; i < 100; i++) {
+		snow[i].y -= snow[i].fast;
+		if (snow[i].y < 0) make_snow(i);
+	}
+	//길 움직이기
 	for (int i = 0; i < road_count; i++) {
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
 			cameraPos.x - 0.6, cameraPos.z - 0.6, cameraPos.x + 0.6, cameraPos.z + 0.6))
@@ -138,8 +162,6 @@ void specialKeyCallback(int key, int x, int y) {
 		break;
 	case GLUT_KEY_LEFT:
 		cameraPos.x -= 0.1;
-		printf("%f %f %f %f %f %f %f %f", cameraPos.x - 2.0, cameraPos.z - 2.0, cameraPos.x + 2.0, cameraPos.z + 2.0,
-			road_x_move[0] - 2.0, road_z_move[0] - 2.0, road_x_move[0] + 2.0, road_z_move[0] + 2.0);
 		break;
 	case GLUT_KEY_RIGHT:
 		cameraPos.x += 0.1;
@@ -199,6 +221,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 GLvoid drawScene()
 {
+	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	//glClearColor(1.0, 1.0, 1.0, 1.0f);
@@ -216,13 +239,22 @@ GLvoid drawScene()
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
 	glm::mat4 box[300] = { glm::mat4(1.0f) };
-
 	glm::mat4 box_scale = glm::mat4(1.0f);
 	glm::mat4 map_move[300] = { glm::mat4(1.0f) };
+	glm::mat4 snow_obj[100] = { glm::mat4(1.0f) };
+	glm::mat4 snow_scale = glm::mat4(1.0f);
+	glm::mat4 snow_move[100] = { glm::mat4(1.0f) };
+
 	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::mat4(1.0f);
 		box[i] = glm::mat4(1.0f);
 	}
+	for (int i = 0; i < 100; i++) {
+		snow_move[i] = glm::mat4(1.0f);
+		snow_obj[i] = glm::mat4(1.0f);
+
+	}
+
 	GLuint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	GLuint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLuint projLoc = glGetUniformLocation(shaderProgramID, "projection");
@@ -270,14 +302,23 @@ GLvoid drawScene()
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
+	glUniform3f(objColorLocation, 0.7, 0.7, 0.7);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
 	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
-
 		box[i] = map_move[i] * box_scale;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
 
+
+	glUniform3f(objColorLocation, 1.0, 1.0, 1.0); // 객체 색 바꿈
+	snow_scale = glm::scale(snow_scale, glm::vec3(0.002, 0.002, 0.002));
+	for (int i = 0; i < 100; i++) {
+		snow_move[i] = glm::translate(snow_move[i], glm::vec3(snow[i].x, snow[i].y, snow[i].z));
+		snow_obj[i] = snow_move[i] * snow_scale;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(snow_obj[i]));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 
 	glutSwapBuffers();
@@ -293,6 +334,7 @@ GLvoid Reshape(int w, int h)
 void InitBuffer()
 {
 	make_map();
+	for(int i=0; i< 100; i++) make_snow(i);
 
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
@@ -322,6 +364,7 @@ void InitBuffer()
 	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
 	glUniform3f(objColorLocation, 1.0, 0.5, 0.3);
+
 	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos"); //--- viewPos 값 전달: 카메라 위치
 	glUniform3f(viewPosLocation, cameraPos.x, cameraPos.y, cameraPos.z);
 }
@@ -477,7 +520,7 @@ void ReadObj(const char* fileName)
 	tex.clear();
 
 	fclose(fp);
-}
+} 
 
 void make_map() {
 	float road_volume = 0.2;
