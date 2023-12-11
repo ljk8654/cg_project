@@ -20,10 +20,10 @@ float light_x = 7;
 float light_y = 10;
 float light_z = 10;
 float zcamera;
-int road_count = 500;
-float road_x_move[500];
-float road_y_move[500];
-float road_z_move[500];
+int road_count = 300;
+float road_x_move[300];
+float road_y_move[300];
+float road_z_move[300];
 
 struct Vertices {
 	glm::vec3 pos;
@@ -215,11 +215,11 @@ GLvoid drawScene()
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box[500] = { glm::mat4(1.0f) };
+	glm::mat4 box[300] = { glm::mat4(1.0f) };
 
 	glm::mat4 box_scale = glm::mat4(1.0f);
-	glm::mat4 map_move[500] = { glm::mat4(1.0f) };
-	for (int i = 0; i < 500; i++) {
+	glm::mat4 map_move[300] = { glm::mat4(1.0f) };
+	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::mat4(1.0f);
 		box[i] = glm::mat4(1.0f);
 	}
@@ -271,7 +271,7 @@ GLvoid drawScene()
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
-	for (int i = 0; i < 500; i++) {
+	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
 
 		box[i] = map_move[i] * box_scale;
