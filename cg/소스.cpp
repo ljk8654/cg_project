@@ -6,7 +6,7 @@
 //--- 함수 선언 추가하기
 
 GLuint window_w = 1000;
-GLuint window_h = 1000;
+GLuint window_h = 900;
 
 glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
