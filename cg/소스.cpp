@@ -162,12 +162,6 @@ void timerfunc(int value) {
 	}
 	// 떨어지는 거 아직 미구현
 
-	if (!spacebar) {		// 스페가 안눌렸었다면 true
-		Tsphere = glm::vec3(xspherespeed, 0.f, zspherespeed += 0.01f);
-	}
-	else {					// 스페가 눌렸었다면 false;
-		Tsphere = glm::vec3(xspherespeed += 0.01f, 0.f, zspherespeed);
-	}
 	frameTime = clock() - currentTime;
 	
 	if (yOn)
@@ -284,12 +278,12 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 	soundManager = new SoundManager();
 	soundManager->PlayBGMSound(BGMSound::Normal, 0.2f, GL_TRUE);
-	ReadObj2("bed.obj");
 	glutTimerFunc(1, timerfunc, 0);
 
 	ReadObj("sphere.obj");
+	//ReadObj2("bed.obj");
 
-	timerfunc(10);
+	//timerfunc(10);
 
 
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
@@ -348,6 +342,7 @@ GLvoid drawScene()
 	
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
+
 	
 	perspective(shaderProgramID, 0.0f);
 	CameraThird(shaderProgramID, glm::vec3(cameraPos.x,cameraPos.y,cameraPos.z), glm::vec3(cameraPos.x + 0.25, cameraPos.y - 3.0, cameraPos.z - 3), yRotate);
@@ -369,13 +364,13 @@ GLvoid drawScene()
 
 
 	UpdateBuffer();
-	glBindVertexArray(vao);
-	glUniform3f(objColorLocation, 0.7, 0.7, 0.0);
-	Oobj = glm::translate(Oobj, glm::vec3(0, 0.0, 0));
-	obj_scale = glm::scale(obj_scale, glm::vec3(0.2, 0.2, 0.2));
+	//glBindVertexArray(vao);
+	//glUniform3f(objColorLocation, 0.7, 0.7, 0.0);
+	//Oobj = glm::translate(Oobj, glm::vec3(0, 0.0, 0));
+	//obj_scale = glm::scale(obj_scale, glm::vec3(0.2, 0.2, 0.2));
 
-	Oobj *= obj_scale;
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Oobj));
+	//Oobj *= obj_scale;
+	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Oobj));
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
