@@ -14,7 +14,7 @@ GLvoid ortho(GLuint shaderProgramID, GLfloat space)
 GLvoid perspective(GLuint shaderProgramID, GLfloat space)
 {
 	glm::mat4 projection = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 1000.0f);
+	projection = glm::perspective(glm::radians(80.0f), 1.0f, 0.1f, 1000.0f);
 	projection = glm::translate(projection, glm::vec3(0.0, 0.0, space));
 
 	unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projection");
@@ -54,5 +54,26 @@ void topview(GLuint shaderProgramID)
 	glm::mat4 view = glm::mat4(1.0f);
 	view = glm::lookAt(glm::vec3(0, 70, 0), glm::vec3(0, 0, 0), cameraUp);
 	unsigned int viewLocation = glGetUniformLocation(shaderProgramID, "view");
+	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
+}
+
+
+
+void CameraThird(GLuint s_program, glm::vec3 cameraPos, glm::vec3 cameraLook, GLfloat yRotate)
+{
+	glm::vec3 CP, CL;
+	glm::mat4 transformMatrix(1.0f);
+	glm::vec4 TempCameraPos = { cameraPos.x, cameraPos.y, cameraPos.z, 0 };
+	glm::vec4 TempCameraLook = { cameraLook.x, cameraLook.y, cameraLook.z, 0 };
+	//TempCameraPos = rotate(transformMatrix, glm::radians(yRotate), glm::vec3(0, 1, 0)) * TempCameraPos;
+
+	transformMatrix = glm::mat4(1.0f);
+	TempCameraLook = rotate(transformMatrix, glm::radians(yRotate), glm::vec3(0, 1, 0)) * TempCameraLook;
+	CP = { TempCameraPos.x, TempCameraPos.y, TempCameraPos.z };
+	CL = { TempCameraLook.x, TempCameraLook.y, TempCameraLook.z };
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::mat4 view = glm::mat4(1.0f);
+	view = glm::lookAt(CP, CL, cameraUp);
+	unsigned int viewLocation = glGetUniformLocation(s_program, "view");
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 }

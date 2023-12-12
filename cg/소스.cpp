@@ -1,33 +1,48 @@
 #include "std.h"
 #include "transform.h"
+#include "Sound.h"
+
 //--- 메인 함수
 //--- 함수 선언 추가하기
 
 GLuint window_w = 1000;
 GLuint window_h = 900;
 
-unsigned int lightPosLocation;
-unsigned int lightColorLocation;
-unsigned int viewLocation;
-
-glm::vec3 lightPos(7, 10, 10);
 glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
 
-float light_x = 7;
-float light_y = 10;
-float light_z = 10;
-float zcamera;
-int road_count = 500;
-float road_x_move[500];
-float road_y_move[500];
-float road_z_move[500];
+int road_count = 300;
+float road_x_move[300];
+float road_y_move[300];
+float road_z_move[300];
+GLboolean yOn = true;
+GLboolean Reverse_yOn = false;
+GLfloat APS = 5;
+GLfloat yRotate = 0;
+void timerfunc(int value);
+
+
 
 struct Vertices {
 	glm::vec3 pos;
 	glm::vec3 nor;
 };
 std::vector<Vertices> m_vertices;
+
+struct Snow {
+	float x, y, z;
+	float fast;
+};
+
+Snow snow[100];
+
+void make_snow(int i) {
+
+		snow[i].x = cameraPos.x + float(rand() % 10) / 10 - 0.5;
+		snow[i].z = cameraPos.z + float(rand() % 10) / 10 - 0.5;
+		snow[i].y = 1.0;
+		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
+}
 
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -61,6 +76,7 @@ void UpdateBuffer();
 void make_map();
 char* filetobuf(const char*);
 void ReadObj(const char* fileName);
+void ReadObj2(const char* fileName);
 
 bool spacebar;
 bool jump;
@@ -71,6 +87,8 @@ float gravity = 0.001f;
 float power = 0.017f;
 float fTime = 0.1f;
 glm::vec3 Tsphere;
+
+SoundManager* soundManager = nullptr;
 
 bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
 	float rect2_left, float rect2_bottom, float rect2_right, float rect2_top) {
@@ -91,6 +109,21 @@ bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float r
 }
 
 void timerfunc(int value) {
+
+	static int prevTime = glutGet(GLUT_ELAPSED_TIME);
+	int currentTime = glutGet(GLUT_ELAPSED_TIME);
+	int frameTime = currentTime - prevTime;
+	prevTime = currentTime;
+
+	frameTime = static_cast<float>(frameTime) / CLOCKS_PER_SEC;
+
+	//눈 내리기
+	for (int i = 0; i < 100; i++) {
+		snow[i].y -= snow[i].fast;
+		if (snow[i].y < 0) make_snow(i);
+	}
+
+	//길 움직이기
 	for (int i = 0; i < road_count; i++) {
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
 			cameraPos.x - 0.6, cameraPos.z - 0.6, cameraPos.x + 0.6, cameraPos.z + 0.6))
@@ -129,8 +162,32 @@ void timerfunc(int value) {
 	}
 	// 떨어지는 거 아직 미구현
 
+	if (!spacebar) {		// 스페가 안눌렸었다면 true
+		Tsphere = glm::vec3(xspherespeed, 0.f, zspherespeed += 0.01f);
+	}
+	else {					// 스페가 눌렸었다면 false;
+		Tsphere = glm::vec3(xspherespeed += 0.01f, 0.f, zspherespeed);
+	}
+	frameTime = clock() - currentTime;
+	
+	if (yOn)
+		yRotate += APS * frameTime / 1000;
+	if (Reverse_yOn)
+		yRotate -= APS * frameTime / 1000;
+
+	if (yRotate > 30)
+	{
+		Reverse_yOn = true;
+		yOn = false;
+	}
+	else if (yRotate < -30)
+	{
+		Reverse_yOn = false;
+		yOn = true;
+	}
+
 	glutPostRedisplay();
-	glutTimerFunc(1, timerfunc, 1);
+	glutTimerFunc(1, timerfunc, 0);
 
 }
 
@@ -153,23 +210,25 @@ void Mouse(int button, int state, int x, int y) {
 
 }
 void specialKeyCallback(int key, int x, int y) {
+	float moveSpeed = 0.1;  // 필요에 따라 이동 속도를 조절하세요
+	float angleRad = glm::radians(yRotate);  // 각도를 라디안으로 변환
+
 	switch (key) {
 	case GLUT_KEY_UP:
-	{
-		cameraPos.z -= 0.1;
-	}
-	break;
+		cameraPos.x -= moveSpeed * sin(angleRad);
+		cameraPos.z -= moveSpeed * cos(angleRad);
+		break;
 	case GLUT_KEY_DOWN:
-		cameraPos.z += 0.1;
+		cameraPos.x += moveSpeed * sin(angleRad);
+		cameraPos.z += moveSpeed * cos(angleRad);
 		break;
 	case GLUT_KEY_LEFT:
-		cameraPos.x -= 0.1;
-		printf("%f %f %f %f %f %f %f %f", cameraPos.x - 2.0, cameraPos.z - 2.0, cameraPos.x + 2.0, cameraPos.z + 2.0,
-			road_x_move[0] - 2.0, road_z_move[0] - 2.0, road_x_move[0] + 2.0, road_z_move[0] + 2.0);
+		cameraPos.x -= moveSpeed * cos(angleRad);
+		cameraPos.z += moveSpeed * sin(angleRad);
 		break;
 	case GLUT_KEY_RIGHT:
-		cameraPos.x += 0.1;
-
+		cameraPos.x += moveSpeed * cos(angleRad);
+		cameraPos.z -= moveSpeed * sin(angleRad);
 		break;
 	case GLUT_KEY_CTRL_L:
 		if (!jump) {
@@ -184,7 +243,6 @@ void specialKeyCallback(int key, int x, int y) {
 		break;
 	}
 	glutPostRedisplay();
-
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y) {
@@ -192,15 +250,14 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 	switch (key)
 	{
 	case 32:
-	{
-		if (!spacebar) {		// 스페가 안눌렸었다면 true
+	if (!spacebar) {		// 스페가 안눌렸었다면 true
 			spacebar = true;
 		}
 		else {					// 스페가 눌렸었다면 false;
 			spacebar = false;
 		}
-	}
-	break;
+		break;
+	
 	}
 	glutPostRedisplay();
 
@@ -225,6 +282,11 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutSpecialFunc(specialKeyCallback);
 	glutDisplayFunc(drawScene);
 
+	soundManager = new SoundManager();
+	soundManager->PlayBGMSound(BGMSound::Normal, 0.2f, GL_TRUE);
+	ReadObj2("bed.obj");
+	glutTimerFunc(1, timerfunc, 0);
+
 	ReadObj("sphere.obj");
 
 	timerfunc(10);
@@ -238,30 +300,40 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 GLvoid drawScene()
 {
+	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	//glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(shaderProgramID);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindVertexArray(vao);
 
-	glm::vec3 cameraDirection = glm::vec3(cameraPos.x + 0.25, cameraPos.y - 1.5, cameraPos.z - 1); //--- 카메라 바라보는 방향
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	//--- 사용할 VAO 불러오기
 	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box[500] = { glm::mat4(1.0f) };
-
+	glm::mat4 box[300] = { glm::mat4(1.0f) };
 	glm::mat4 box_scale = glm::mat4(1.0f);
-	glm::mat4 map_move[500] = { glm::mat4(1.0f) };
-	for (int i = 0; i < 500; i++) {
+	glm::mat4 map_move[300] = { glm::mat4(1.0f) };
+	glm::mat4 snow_obj[100] = { glm::mat4(1.0f) };
+	glm::mat4 snow_scale = glm::mat4(1.0f);
+	glm::mat4 obj_scale = glm::mat4(1.0f);
+	glm::mat4 snow_move[100] = { glm::mat4(1.0f) };
+	glm::mat4 Oobj = glm::mat4(1.0f);
+
+
+	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::mat4(1.0f);
 		box[i] = glm::mat4(1.0f);
 	}
+	for (int i = 0; i < 100; i++) {
+		snow_move[i] = glm::mat4(1.0f);
+		snow_obj[i] = glm::mat4(1.0f);
+
+	}
+
 	GLuint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	GLuint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLuint projLoc = glGetUniformLocation(shaderProgramID, "projection");
@@ -276,19 +348,12 @@ GLvoid drawScene()
 	
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
-	glm::mat4 vTransform = glm::mat4(1.0f);
-	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
-	vTransform = vTransform; //카메라위치 돌리기 앞에두면 카메라 자전, 뒤에 두면 카메라 공전
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
 	
 	perspective(shaderProgramID, 0.0f);
-
-	//lightPos = glm::vec3(lightPos.x, lightPos.y, lightPos.z);
-	//float light = 1 - abs((ballPos.y-5)/ 140);
-	//lightColor = glm::vec3(lightColor.x, lightColor.y, lightColor.z);
+	CameraThird(shaderProgramID, glm::vec3(cameraPos.x,cameraPos.y,cameraPos.z), glm::vec3(cameraPos.x + 0.25, cameraPos.y - 3.0, cameraPos.z - 3), yRotate);
 
 	 {   //조명 위치
-		glm::vec4 lightPosInModelSpace = glm::vec4(light_x, light_y, light_z, 1.0f);
+		glm::vec4 lightPosInModelSpace = glm::vec4(cameraPos.x , cameraPos.y, cameraPos.z,1.0f);
 		lightPosInModelSpace = lightPosInModelSpace;
 		// 셰이더에 변환된 조명 위치 전달
 		GLuint lightPosLoc = glGetUniformLocation(shaderProgramID, "lightPos");
@@ -305,16 +370,32 @@ GLvoid drawScene()
 
 	UpdateBuffer();
 	glBindVertexArray(vao);
+	glUniform3f(objColorLocation, 0.7, 0.7, 0.0);
+	Oobj = glm::translate(Oobj, glm::vec3(0, 0.0, 0));
+	obj_scale = glm::scale(obj_scale, glm::vec3(0.2, 0.2, 0.2));
+
+	Oobj *= obj_scale;
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(Oobj));
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
-	for (int i = 0; i < 500; i++) {
+	for (int i = 0; i < 300; i++) {
 		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
-
 		box[i] = map_move[i] * box_scale;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
+		if(i % 100 == 38) glUniform3f(objColorLocation, 0.0, 0.0, 0.0);
+		else glUniform3f(objColorLocation, 0.7, 0.7, 0.7);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
 
+
+	glUniform3f(objColorLocation, 1.0, 1.0, 1.0); // 객체 색 바꿈
+	snow_scale = glm::scale(snow_scale, glm::vec3(0.002, 0.002, 0.002));
+	for (int i = 0; i < 100; i++) {
+		snow_move[i] = glm::translate(snow_move[i], glm::vec3(snow[i].x, snow[i].y, snow[i].z));
+		snow_obj[i] = snow_move[i] * snow_scale;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(snow_obj[i]));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 
 	glutSwapBuffers();
@@ -330,7 +411,8 @@ GLvoid Reshape(int w, int h)
 void InitBuffer()
 {
 	make_map();
-
+	for(int i=0; i< 100; i++) make_snow(i);
+	//ReadObj("mushroom.obj");
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo[0]);
@@ -473,33 +555,100 @@ void ReadObj(const char* fileName)
 		// vertex normal
 		else if (buff[0] == 'v' && buff[1] == 'n' && buff[2] == '\0') {
 			glm::vec3 pos;
-			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(2);
 			nor.push_back(pos);
 		}
 		// vertex texture coordinate
 		else if (buff[0] == 'v' && buff[1] == 't' && buff[2] == '\0') {
 			glm::vec2 pos;
-			if (fscanf(fp, "%f %f", &pos.x, &pos.y) != 2) exit(1);
+			if (fscanf(fp, "%f %f", &pos.x, &pos.y) != 2) exit(6);
 			tex.push_back(pos);
 		}
 		else if (buff[0] == 'f' && buff[1] == '\0') {
 			Vertices temp;
 			int v, t, n;
-			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(5);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
-			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(7);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
-			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
+			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(8);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+		}
+
+		memset(buff, NULL, sizeof(buff));
+	}
+	vtx.clear();
+	nor.clear();
+	tex.clear();
+	fclose(fp);
+} 
+
+
+void ReadObj2(const char* fileName)
+{
+	FILE* fp = fopen(fileName, "r");
+
+	if (fp == NULL) {
+		std::cerr << "Invalid Object File!!\n";
+		exit(100);
+	}
+
+	char buff[100];
+	int faceNum = 0;
+	std::vector<glm::vec3> vtx;
+	std::vector<glm::vec3> nor;
+	std::vector<glm::vec3> tex;
+
+	while (!feof(fp)) {
+		if (fscanf(fp, "%s", buff) == 3) printf("hello it's 3");
+
+		// vertex or element buffer
+		if (buff[0] == 'v' && buff[1] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
+			vtx.push_back(pos);
+		}
+		// vertex normal
+		else if (buff[0] == 'v' && buff[1] == 'n' && buff[2] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(2);
+			nor.push_back(pos);
+		}
+		// vertex texture coordinate
+		else if (buff[0] == 'v' && buff[1] == 't' && buff[2] == '\0') {
+			glm::vec3 pos;
+			if (fscanf(fp, "%f %f", &pos.x, &pos.y) != 2) exit(6);
+			tex.push_back(pos);
+		}
+		else if (buff[0] == 'f' && buff[1] == '\0') {
+			Vertices temp;
+			int v, t, n;
+			if (fscanf(fp, "%d/%d", &v, &t) != 2) exit(5);
+			temp.pos = vtx[v - 1];
+			temp.nor = tex[t - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+
+			if (fscanf(fp, "%d/%d", &v, &n) != 2) exit(7);
+			temp.pos = vtx[v - 1];
+			temp.nor = tex[n - 1];
+			//temp.TexCoordinate = tex[t - 1];
+			m_vertices.push_back(temp);
+
+			if (fscanf(fp, "%d/%d", &v, &n) != 2) exit(8);
+			temp.pos = vtx[v - 1];
+			temp.nor = tex[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 		}
@@ -514,7 +663,6 @@ void ReadObj(const char* fileName)
 
 	fclose(fp);
 }
-
 void make_map() {
 	float road_volume = 0.2;
 	int x_inc_count = 0;
@@ -529,7 +677,6 @@ void make_map() {
 		else z_inc_count++;
 	}
 }
-
 //--- out_Color: 버텍스 세이더에서 입력받는 색상 값
 //--- FragColor: 출력할 색상의 값으로 프레임 버퍼로 전달 됨.
 
