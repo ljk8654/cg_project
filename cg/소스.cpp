@@ -4,7 +4,7 @@
 //--- 함수 선언 추가하기
 
 GLuint window_w = 1000;
-GLuint window_h = 1000;
+GLuint window_h = 900;
 
 unsigned int lightPosLocation;
 unsigned int lightColorLocation;
@@ -62,19 +62,15 @@ void make_map();
 char* filetobuf(const char*);
 void ReadObj(const char* fileName);
 
-bool left_button;
 bool spacebar;
 bool jump;
-bool floortouch = false;
 float zspherespeed = 0.01f;
 float xspherespeed = 0.01f;
 float yspherespeed = 0.f;
-float gravity = 0.0098f;
-float power = 0.2f;
-float fTime = 1.f;
-float fTime2 = 1.f;
+float gravity = 0.001f;
+float power = 0.017f;
+float fTime = 0.1f;
 glm::vec3 Tsphere;
-glm::mat4 checkSphere;
 
 bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
 	float rect2_left, float rect2_bottom, float rect2_right, float rect2_top) {
@@ -94,62 +90,47 @@ bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float r
 	return (x >= rect_left && x <= rect_right && y >= rect_bottom && y <= rect_top);
 }
 
-bool isSphereCubeCollision(glm::mat4 sphere, glm::mat4 cube) {
-	glm::vec3 sphereCenter = glm::vec3(sphere[3]);
-	glm::vec3 cubeCenter = glm::vec3(cube[3]);
-
-	if (sphereCenter.y - cubeCenter.y < 0.f)
-		return true;
-	else
-		return false;
-}
-
 void timerfunc(int value) {
 	for (int i = 0; i < road_count; i++) {
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
 			cameraPos.x - 0.6, cameraPos.z - 0.6, cameraPos.x + 0.6, cameraPos.z + 0.6))
 		{
-			road_y_move[i] += 0.002;
+			road_y_move[i] += 0.01;
 		}
 	}
 
-	if (!spacebar) {		// 스페가 안눌렸었다면 true
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.01f);
+	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.001f);
 	}
-	else {					// 스페가 눌렸었다면 false;
-		Tsphere = glm::vec3(xspherespeed += 0.01f, yspherespeed -= gravity, zspherespeed);
-	}
-	for (int i = 0; i < road_count; ++i) {
-		if (yspherespeed < road_y_move[i])
-			yspherespeed = road_y_move[i];
-
-		
+	else {				// 좌측 방향 x 보는 방향 기준
+		Tsphere = glm::vec3(xspherespeed += 0.001f, yspherespeed -= gravity, zspherespeed);
 	}
 
-	std::cout << "y구 - " << yspherespeed << " 맵y - " << road_y_move[0] << '\n';
-
-	//box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
-	//for (int i = 0; i < 500; i++) {
-	//	map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
-
-	//	box[i] = map_move[i] * box_scale;
-	//	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
+	for (int i = 0; i < road_count; ++i)
+		if (yspherespeed < road_y_move[i] + 0.2f) 
+			yspherespeed = road_y_move[i] + 0.2f;
 
 	if (jump) {		// 증가값이 일정값 넘으면 역방향
 		Tsphere = glm::vec3(xspherespeed, yspherespeed += (power * fTime - (gravity * (fTime * fTime))) * 0.5f, zspherespeed);
-		fTime += 0.04;
-		std::cout << yspherespeed << '\t' << (power * fTime - (gravity * (fTime * fTime))) << '\n';
+		power -= 0.00015f;
+		if ((power * fTime) < (gravity * fTime * fTime) * 0.5f)
+			fTime += 0.03f;
+		else
+			fTime += 0.1f;
+
 		for (int i = 0; i < road_count; ++i) {
-			if (yspherespeed < road_y_move[i] - 1.f) {
-				yspherespeed = road_y_move[i] - 1.f;
+			if (yspherespeed < road_y_move[i] + 0.2f) {
+				yspherespeed = road_y_move[i] + 0.2f;
 				jump = false;
 				fTime = 0.f;
+				power = 0.017f;
 			}
 		}
 	}
+	// 떨어지는 거 아직 미구현
 
 	glutPostRedisplay();
-	glutTimerFunc(10, timerfunc, 1);
+	glutTimerFunc(1, timerfunc, 1);
 
 }
 
@@ -245,7 +226,6 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene);
 
 	ReadObj("sphere.obj");
-	//ReadObj("nescafe_mug.obj");
 
 	timerfunc(10);
 
@@ -290,11 +270,9 @@ GLvoid drawScene()
 
 	glm::mat4 mTransform = glm::mat4(1.0f);
 	Tx = glm::translate(glm::mat4(1.0f), Tsphere);
-	Rz = glm::rotate(mTransform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	Sc = glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.1));
 
-	mTransform = Sc * Tx;
-	checkSphere = mTransform;
+	mTransform = Tx * Sc;
 	
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
