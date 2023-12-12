@@ -179,15 +179,15 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 	switch (key)
 	{
 	case 32:
-	{
-		if (!spacebar) {		// 스페가 안눌렸었다면 true
+	if (!spacebar) {		// 스페가 안눌렸었다면 true
 			spacebar = true;
 		}
 		else {					// 스페가 눌렸었다면 false;
 			spacebar = false;
 		}
-	}
-	break;
+		break;
+	case 'a':
+		break;
 	}
 	glutPostRedisplay();
 
