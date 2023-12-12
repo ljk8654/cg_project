@@ -6,7 +6,7 @@
 //--- 함수 선언 추가하기
 
 GLuint window_w = 1000;
-GLuint window_h = 1000;
+GLuint window_h = 900;
 
 glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
@@ -15,6 +15,13 @@ int road_count = 300;
 float road_x_move[300];
 float road_y_move[300];
 float road_z_move[300];
+GLfloat currentTime, frameTime, frame;
+GLboolean yOn = true;
+GLboolean Reverse_yOn = false;
+GLfloat APS = 15;
+GLfloat yRotate = 0;
+
+
 
 struct Vertices {
 	glm::vec3 pos;
@@ -118,6 +125,26 @@ void timerfunc(int value) {
 	else {					// 스페가 눌렸었다면 false;
 		Tsphere = glm::vec3(xspherespeed += 0.01f, 0.f, zspherespeed);
 	}
+
+	frameTime = clock() - currentTime;
+	
+	if (yOn)
+		yRotate += APS * frameTime / 1000;
+	if (Reverse_yOn)
+		yRotate -= APS * frameTime / 1000;
+
+	if (yRotate > 30)
+	{
+		Reverse_yOn = true;
+		yOn = false;
+	}
+	else if (yRotate < -30)
+	{
+		Reverse_yOn = false;
+		yOn = true;
+	}
+
+	currentTime += frameTime;
 	glutPostRedisplay();
 	glutTimerFunc(10000, timerfunc, 1);
 
@@ -221,8 +248,6 @@ GLvoid drawScene()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindVertexArray(vao);
 
-	glm::vec3 cameraDirection = glm::vec3(cameraPos.x + 0.25, cameraPos.y - 1.5, cameraPos.z - 1); //--- 카메라 바라보는 방향
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	//--- 사용할 VAO 불러오기
 	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
@@ -263,12 +288,9 @@ GLvoid drawScene()
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
-	glm::mat4 vTransform = glm::mat4(1.0f);
-	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
-	vTransform = vTransform; //카메라위치 돌리기 앞에두면 카메라 자전, 뒤에 두면 카메라 공전
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
 	
 	perspective(shaderProgramID, 0.0f);
+	CameraThird(shaderProgramID, glm::vec3(cameraPos.x,cameraPos.y,cameraPos.z), glm::vec3(cameraPos.x + 0.25, cameraPos.y - 3.0, cameraPos.z - 3), yRotate);
 
 	 {   //조명 위치
 		glm::vec4 lightPosInModelSpace = glm::vec4(cameraPos.x , cameraPos.y, cameraPos.z,1.0f);
@@ -596,7 +618,6 @@ void make_map() {
 		else z_inc_count++;
 	}
 }
-
 //--- out_Color: 버텍스 세이더에서 입력받는 색상 값
 //--- FragColor: 출력할 색상의 값으로 프레임 버퍼로 전달 됨.
 
