@@ -74,6 +74,7 @@ float power = 0.2f;
 float fTime = 1.f;
 float fTime2 = 1.f;
 glm::vec3 Tsphere;
+glm::mat4 checkSphere;
 
 bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
 	float rect2_left, float rect2_bottom, float rect2_right, float rect2_top) {
@@ -92,6 +93,17 @@ bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, fl
 bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float rect_right, float rect_top) {
 	return (x >= rect_left && x <= rect_right && y >= rect_bottom && y <= rect_top);
 }
+
+bool isSphereCubeCollision(glm::mat4 sphere, glm::mat4 cube) {
+	glm::vec3 sphereCenter = glm::vec3(sphere[3]);
+	glm::vec3 cubeCenter = glm::vec3(cube[3]);
+
+	if (sphereCenter.y - cubeCenter.y < 0.f)
+		return true;
+	else
+		return false;
+}
+
 void timerfunc(int value) {
 	for (int i = 0; i < road_count; i++) {
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
@@ -102,15 +114,17 @@ void timerfunc(int value) {
 	}
 
 	if (!spacebar) {		// 스페가 안눌렸었다면 true
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.0001f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.01f);
 	}
 	else {					// 스페가 눌렸었다면 false;
-		Tsphere = glm::vec3(xspherespeed += 0.0001f, yspherespeed -= gravity, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.01f, yspherespeed -= gravity, zspherespeed);
 	}
-	/*for (int i = 0; i < road_count; ++i) {
-		if (yspherespeed < )
-			yspherespeed = road_y_move[i] - 1.f;
-	}*/
+	for (int i = 0; i < road_count; ++i) {
+		if (yspherespeed < road_y_move[i])
+			yspherespeed = road_y_move[i];
+
+		
+	}
 
 	std::cout << "y구 - " << yspherespeed << " 맵y - " << road_y_move[0] << '\n';
 
@@ -135,8 +149,7 @@ void timerfunc(int value) {
 	}
 
 	glutPostRedisplay();
-	//if(spacebar)
-		//glutTimerFunc(100, timerfunc, 1);
+	glutTimerFunc(10, timerfunc, 1);
 
 }
 
@@ -234,6 +247,9 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	ReadObj("sphere.obj");
 	//ReadObj("nescafe_mug.obj");
 
+	timerfunc(10);
+
+
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 	glutMainLoop();
 
@@ -278,6 +294,7 @@ GLvoid drawScene()
 	Sc = glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.1));
 
 	mTransform = Sc * Tx;
+	checkSphere = mTransform;
 	
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
@@ -307,7 +324,6 @@ GLvoid drawScene()
 	//box = box * box_scale;
 	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box));
 
-	timerfunc(10);
 
 	UpdateBuffer();
 	glBindVertexArray(vao);
@@ -507,11 +523,6 @@ void ReadObj(const char* fileName)
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
 			//temp.TexCoordinate = tex[t - 1];
-			m_vertices.push_back(temp);
-
-			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(1);
-			temp.pos = vtx[v - 1];
-			temp.nor = nor[n - 1];
 			m_vertices.push_back(temp);
 		}
 
