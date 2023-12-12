@@ -15,11 +15,11 @@ int road_count = 300;
 float road_x_move[300];
 float road_y_move[300];
 float road_z_move[300];
-GLfloat currentTime, frameTime, frame;
 GLboolean yOn = true;
 GLboolean Reverse_yOn = false;
-GLfloat APS = 15;
+GLfloat APS = 5;
 GLfloat yRotate = 0;
+void timerfunc(int value);
 
 
 
@@ -106,11 +106,19 @@ bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float r
 }
 void timerfunc(int value) {
 
+	static int prevTime = glutGet(GLUT_ELAPSED_TIME);
+	int currentTime = glutGet(GLUT_ELAPSED_TIME);
+	int frameTime = currentTime - prevTime;
+	prevTime = currentTime;
+
+	frameTime = static_cast<float>(frameTime) / CLOCKS_PER_SEC;
+
 	//눈 내리기
 	for (int i = 0; i < 100; i++) {
 		snow[i].y -= snow[i].fast;
 		if (snow[i].y < 0) make_snow(i);
 	}
+
 	//길 움직이기
 	for (int i = 0; i < road_count; i++) {
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
@@ -125,7 +133,6 @@ void timerfunc(int value) {
 	else {					// 스페가 눌렸었다면 false;
 		Tsphere = glm::vec3(xspherespeed += 0.01f, 0.f, zspherespeed);
 	}
-
 	frameTime = clock() - currentTime;
 	
 	if (yOn)
@@ -144,9 +151,8 @@ void timerfunc(int value) {
 		yOn = true;
 	}
 
-	currentTime += frameTime;
 	glutPostRedisplay();
-	glutTimerFunc(10000, timerfunc, 1);
+	glutTimerFunc(1, timerfunc, 0);
 
 }
 
@@ -169,25 +175,28 @@ void Mouse(int button, int state, int x, int y) {
 
 }
 void specialKeyCallback(int key, int x, int y) {
+	float moveSpeed = 0.1;  // 필요에 따라 이동 속도를 조절하세요
+	float angleRad = glm::radians(yRotate);  // 각도를 라디안으로 변환
+
 	switch (key) {
 	case GLUT_KEY_UP:
-	{
-		cameraPos.z -= 0.1;
-	}
-	break;
+		cameraPos.x -= moveSpeed * sin(angleRad);
+		cameraPos.z -= moveSpeed * cos(angleRad);
+		break;
 	case GLUT_KEY_DOWN:
-		cameraPos.z += 0.1;
+		cameraPos.x += moveSpeed * sin(angleRad);
+		cameraPos.z += moveSpeed * cos(angleRad);
 		break;
 	case GLUT_KEY_LEFT:
-		cameraPos.x -= 0.1;
+		cameraPos.x -= moveSpeed * cos(angleRad);
+		cameraPos.z += moveSpeed * sin(angleRad);
 		break;
 	case GLUT_KEY_RIGHT:
-		cameraPos.x += 0.1;
-
+		cameraPos.x += moveSpeed * cos(angleRad);
+		cameraPos.z -= moveSpeed * sin(angleRad);
 		break;
 	}
 	glutPostRedisplay();
-
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y) {
@@ -230,6 +239,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	soundManager = new SoundManager();
 	soundManager->PlayBGMSound(BGMSound::Normal, 0.2f, GL_TRUE);
 	ReadObj2("bed.obj");
+	glutTimerFunc(1, timerfunc, 0);
 
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 	glutMainLoop();
@@ -307,7 +317,6 @@ GLvoid drawScene()
 	//box = box * box_scale;
 	//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box));
 
-	timerfunc(10);
 
 	UpdateBuffer();
 	glBindVertexArray(vao);
