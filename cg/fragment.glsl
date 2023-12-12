@@ -10,7 +10,7 @@ uniform vec3 objectColor; //--- 객체의 색
 
 void main()
 {
-	float ambientLight = 0.5;
+	float ambientLight = 0.1;
     vec3 ambient = ambientLight * lightColor;
 
     vec3 norm = normalize(Normal);
@@ -23,7 +23,8 @@ void main()
 
     vec3 viewDir = normalize(-FragPos); // 수정: 간단한 방향광이므로 뷰 방향은 카메라에서 조명까지의 반대 방향
     vec3 reflectDir = reflect(-lightDir, norm);
-    float specularLight = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+	float specularLight = max(dot(viewDir, reflectDir), 0.0);
+   	specularLight = pow(specularLight, shininess);
     vec3 specular = specularLight * lightColor;
 
     vec3 result = (ambient + diffuse + specular) * objectColor;

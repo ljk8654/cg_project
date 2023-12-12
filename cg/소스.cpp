@@ -8,18 +8,9 @@
 GLuint window_w = 1000;
 GLuint window_h = 1000;
 
-unsigned int lightPosLocation;
-unsigned int lightColorLocation;
-unsigned int viewLocation;
-
-glm::vec3 lightPos(7, 10, 10);
 glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
 
-float light_x = 7;
-float light_y = 10;
-float light_z = 10;
-float zcamera;
 int road_count = 300;
 float road_x_move[300];
 float road_y_move[300];
@@ -44,8 +35,6 @@ void make_snow(int i) {
 		snow[i].z = cameraPos.z + float(rand() % 10) / 10 - 0.5;
 		snow[i].y = 1.0;
 		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
-	
-
 }
 
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
@@ -186,8 +175,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 			spacebar = false;
 		}
 		break;
-	case 'a':
-		break;
+	
 	}
 	glutPostRedisplay();
 
@@ -227,7 +215,6 @@ GLvoid drawScene()
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	//glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
 	glUseProgram(shaderProgramID);
@@ -283,12 +270,8 @@ GLvoid drawScene()
 	
 	perspective(shaderProgramID, 0.0f);
 
-	//lightPos = glm::vec3(lightPos.x, lightPos.y, lightPos.z);
-	//float light = 1 - abs((ballPos.y-5)/ 140);
-	//lightColor = glm::vec3(lightColor.x, lightColor.y, lightColor.z);
-
 	 {   //조명 위치
-		glm::vec4 lightPosInModelSpace = glm::vec4(light_x, light_y, light_z, 1.0f);
+		glm::vec4 lightPosInModelSpace = glm::vec4(cameraPos.x , cameraPos.y, cameraPos.z,1.0f);
 		lightPosInModelSpace = lightPosInModelSpace;
 		// 셰이더에 변환된 조명 위치 전달
 		GLuint lightPosLoc = glGetUniformLocation(shaderProgramID, "lightPos");
@@ -377,7 +360,6 @@ void InitBuffer()
 	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
 	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
 	glUniform3f(objColorLocation, 1.0, 0.5, 0.3);
-
 	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos"); //--- viewPos 값 전달: 카메라 위치
 	glUniform3f(viewPosLocation, cameraPos.x, cameraPos.y, cameraPos.z);
 }
@@ -525,12 +507,9 @@ void ReadObj(const char* fileName)
 
 		memset(buff, NULL, sizeof(buff));
 	}
-
-
 	vtx.clear();
 	nor.clear();
 	tex.clear();
-
 	fclose(fp);
 } 
 
