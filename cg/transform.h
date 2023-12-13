@@ -63,17 +63,21 @@ void CameraThird(GLuint s_program, glm::vec3 cameraPos, glm::vec3 cameraLook, GL
 {
 	glm::vec3 CP, CL;
 	glm::mat4 transformMatrix(1.0f);
-	glm::vec4 TempCameraPos = { cameraPos.x, cameraPos.y, cameraPos.z, 0 };
-	glm::vec4 TempCameraLook = { cameraLook.x, cameraLook.y, cameraLook.z, 0 };
-	//TempCameraPos = rotate(transformMatrix, glm::radians(yRotate), glm::vec3(0, 1, 0)) * TempCameraPos;
 
-	transformMatrix = glm::mat4(1.0f);
-	TempCameraLook = rotate(transformMatrix, glm::radians(yRotate), glm::vec3(0, 1, 0)) * TempCameraLook;
+	transformMatrix = glm::rotate(transformMatrix, glm::radians(yRotate), glm::vec3(0, 1, 0));
+
+	glm::vec4 TempCameraPos = glm::vec4(cameraPos, 1.0f);
+	glm::vec4 TempCameraLook = glm::vec4(cameraLook, 1.0f);
+
+	TempCameraPos = transformMatrix * TempCameraPos;
+	//TempCameraLook = transformMatrix * TempCameraLook;
+
 	CP = { TempCameraPos.x, TempCameraPos.y, TempCameraPos.z };
 	CL = { TempCameraLook.x, TempCameraLook.y, TempCameraLook.z };
+
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::lookAt(CP, CL, cameraUp);
+	glm::mat4 view = glm::lookAt(CP, CL, cameraUp);
 	unsigned int viewLocation = glGetUniformLocation(s_program, "view");
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
+
 }

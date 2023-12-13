@@ -8,6 +8,11 @@
 GLuint window_w = 1000;
 GLuint window_h = 900;
 
+unsigned int lightPosLocation;
+unsigned int lightColorLocation;
+unsigned int viewLocation;
+
+glm::vec3 lightPos(0, 100, 0);
 glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
 
@@ -15,12 +20,11 @@ int road_count = 300;
 float road_x_move[300];
 float road_y_move[300];
 float road_z_move[300];
-GLboolean yOn = true;
-GLboolean Reverse_yOn = false;
-GLfloat APS = 5;
+GLfloat APS = 0.25;
 GLfloat yRotate = 0;
-void timerfunc(int value);
-
+float yRotateDirection = 1.0f;
+GLfloat currentTime = 0.0f;
+GLfloat frameTime = 0.0f;
 
 
 struct Vertices {
@@ -77,6 +81,7 @@ void make_map();
 char* filetobuf(const char*);
 void ReadObj(const char* fileName);
 void ReadObj2(const char* fileName);
+void timerfunc(int value);
 
 bool spacebar;
 bool jump;
@@ -109,13 +114,12 @@ bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float r
 }
 
 void timerfunc(int value) {
-
-	static int prevTime = glutGet(GLUT_ELAPSED_TIME);
-	int currentTime = glutGet(GLUT_ELAPSED_TIME);
-	int frameTime = currentTime - prevTime;
-	prevTime = currentTime;
-
-	frameTime = static_cast<float>(frameTime) / CLOCKS_PER_SEC;
+	if (currentTime == 0.0f) {
+		currentTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;  // 초 단위로 변환
+	}
+	GLfloat newTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;  // 초 단위로 변환
+	frameTime = newTime - currentTime;
+	currentTime = newTime;
 
 	//눈 내리기
 	for (int i = 0; i < 100; i++) {
@@ -162,22 +166,16 @@ void timerfunc(int value) {
 	}
 	// 떨어지는 거 아직 미구현
 
-	frameTime = clock() - currentTime;
-	
-	if (yOn)
-		yRotate += APS * frameTime / 1000;
-	if (Reverse_yOn)
-		yRotate -= APS * frameTime / 1000;
+	yRotate += APS * yRotateDirection * frameTime;
 
-	if (yRotate > 30)
-	{
-		Reverse_yOn = true;
-		yOn = false;
+	if (yRotate > 10) {
+		yRotateDirection = -1.0f;  // 역방향으로 회전
+		yRotate = 10.0f;  // 회전 각도 초기화
+
 	}
-	else if (yRotate < -30)
-	{
-		Reverse_yOn = false;
-		yOn = true;
+	else if (yRotate < -10) {
+		yRotateDirection = 1.0f;  // 정방향으로 회전
+		yRotate = -10.0f;  // 회전 각도 초기화
 	}
 
 	glutPostRedisplay();
@@ -244,14 +242,13 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 	switch (key)
 	{
 	case 32:
-	if (!spacebar) {		// 스페가 안눌렸었다면 true
+		if (!spacebar) {		// 스페가 안눌렸었다면 true
 			spacebar = true;
 		}
 		else {					// 스페가 눌렸었다면 false;
 			spacebar = false;
 		}
 		break;
-	
 	}
 	glutPostRedisplay();
 
@@ -279,17 +276,11 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	soundManager = new SoundManager();
 	soundManager->PlayBGMSound(BGMSound::Normal, 0.2f, GL_TRUE);
 	glutTimerFunc(1, timerfunc, 0);
-
 	ReadObj("sphere.obj");
 	//ReadObj2("bed.obj");
-
 	//timerfunc(10);
-
-
 	glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 	glutMainLoop();
-
-
 }
 
 GLvoid drawScene()
@@ -343,18 +334,19 @@ GLvoid drawScene()
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mTransform));
 
 
-	
+	cameraPos.x = xspherespeed- 1.0;
+	cameraPos.y = yspherespeed + 1.5;
+	cameraPos.z = zspherespeed + 1.0;
 	perspective(shaderProgramID, 0.0f);
-	CameraThird(shaderProgramID, glm::vec3(cameraPos.x,cameraPos.y,cameraPos.z), glm::vec3(cameraPos.x + 0.25, cameraPos.y - 3.0, cameraPos.z - 3), yRotate);
+	CameraThird(shaderProgramID, glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z), glm::vec3(xspherespeed+0.3, yspherespeed+0.3, zspherespeed-0.1), yRotate);
+    
+	lightPos = glm::vec3(xspherespeed, yspherespeed + 0.3, zspherespeed);
+	float light = 1 - abs((yspherespeed - 5) / 140);
+	lightColor = glm::vec3(light, light, light);
+	glUniform3f(lightPosLocation, lightPos.x, lightPos.y, lightPos.z);
+	glUniform3f(lightColorLocation, lightColor.x, lightColor.y, lightColor.z);
+	glUniform3f(viewLocation, cameraPos.x, cameraPos.y, cameraPos.z);
 
-	 {   //조명 위치
-		glm::vec4 lightPosInModelSpace = glm::vec4(cameraPos.x , cameraPos.y, cameraPos.z,1.0f);
-		lightPosInModelSpace = lightPosInModelSpace;
-		// 셰이더에 변환된 조명 위치 전달
-		GLuint lightPosLoc = glGetUniformLocation(shaderProgramID, "lightPos");
-		glUniform3f(lightPosLoc, lightPosInModelSpace.x, lightPosInModelSpace.y, lightPosInModelSpace.z);
-
-	}
 
 	//box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
 
@@ -430,14 +422,9 @@ void InitBuffer()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); //--- 노말 속성
 	glEnableVertexAttribArray(1);
 
-	glUseProgram(shaderProgramID);
-
-	unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor"); //--- lightColor 값 전달: (1.0, 1.0, 1.0) 백색
-	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
-	unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
-	glUniform3f(objColorLocation, 1.0, 0.5, 0.3);
-	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos"); //--- viewPos 값 전달: 카메라 위치
-	glUniform3f(viewPosLocation, cameraPos.x, cameraPos.y, cameraPos.z);
+	lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos");
+	lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
+	viewLocation = glGetUniformLocation(shaderProgramID, "viewPos");
 }
 
 void UpdateBuffer()
