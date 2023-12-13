@@ -87,7 +87,7 @@ bool spacebar;
 bool jump;
 float zspherespeed = 0.01f;
 float xspherespeed = 0.01f;
-float yspherespeed = 0.f;
+float yspherespeed = -0.3f;
 float gravity = 0.001f;
 float power = 0.017f;
 float fTime = 0.1f;
@@ -130,22 +130,30 @@ void timerfunc(int value) {
 	//길 움직이기
 	for (int i = 0; i < road_count; i++) {
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
-			cameraPos.x - 0.6, cameraPos.z - 0.6, cameraPos.x + 0.6, cameraPos.z + 0.6))
+			cameraPos.x - 1.5, cameraPos.z - 1.5, cameraPos.x + 1.5, cameraPos.z + 1.5))
 		{
 			road_y_move[i] += 0.01;
 		}
 	}
 
 	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.001f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.005f);
 	}
 	else {				// 좌측 방향 x 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed += 0.001f, yspherespeed -= gravity, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.005f, yspherespeed -= gravity, zspherespeed);
 	}
 
-	for (int i = 0; i < road_count; ++i)
-		if (yspherespeed < road_y_move[i] + 0.2f) 
-			yspherespeed = road_y_move[i] + 0.2f;
+	for (int i = 0; i < road_count; ++i) {
+		if (yspherespeed < road_y_move[i] + 0.2f) {
+			if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i] - 0.5, road_z_move[i] - 0.5, road_x_move[i] + 0.5, road_z_move[i] + 0.5))) {
+				yspherespeed -= 0.005f;
+				break;
+			}
+			else
+				yspherespeed = road_y_move[i] + 0.2f;
+
+		}
+	}
 
 	if (jump) {		// 증가값이 일정값 넘으면 역방향
 		Tsphere = glm::vec3(xspherespeed, yspherespeed += (power * fTime - (gravity * (fTime * fTime))) * 0.5f, zspherespeed);
@@ -157,10 +165,16 @@ void timerfunc(int value) {
 
 		for (int i = 0; i < road_count; ++i) {
 			if (yspherespeed < road_y_move[i] + 0.2f) {
-				yspherespeed = road_y_move[i] + 0.2f;
-				jump = false;
-				fTime = 0.f;
-				power = 0.017f;
+				if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i] - 0.5, road_z_move[i] - 0.5, road_x_move[i] + 0.5, road_z_move[i] + 0.5))) {
+					std::cout << "떨어져야함" << '\n';
+					break;
+				}
+				else {
+					yspherespeed = road_y_move[i] + 0.2f;
+					jump = false;
+					fTime = 0.f;
+					power = 0.017f;
+				}
 			}
 		}
 	}
