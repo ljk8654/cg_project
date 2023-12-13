@@ -37,11 +37,8 @@
     <ClInclude Include="transform.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-<<<<<<< HEAD
-=======
     <ClInclude Include="Sound.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
->>>>>>> master
   </ItemGroup>
 </Project>
