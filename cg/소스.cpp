@@ -1,10 +1,10 @@
 #include "std.h"
 #include "transform.h"
 #include "Sound.h"
-
+#include <windows.h>
 //--- 메인 함수
 //--- 함수 선언 추가하기
-
+#define ONE_SECOND 333
 GLuint window_w = 1000;
 GLuint window_h = 900;
 
@@ -17,6 +17,8 @@ glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
 
 int road_count = 300;
+int old_index = 0;
+int v = 0;
 float road_x_move[300];
 float road_y_move[300];
 float road_z_move[300];
@@ -40,14 +42,24 @@ struct Snow {
 
 Snow snow[100];
 
-void make_snow(int i) {
 
-		snow[i].x = cameraPos.x + float(rand() % 10) / 10 - 0.5;
-		snow[i].z = cameraPos.z + float(rand() % 10) / 10 - 0.5;
-		snow[i].y = 1.0;
-		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
-}
-
+int music_road[] = { 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1
+, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
+1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1
+, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1,
+0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1,
+1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1,
+0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0
+, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1,
+0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1,
+0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0,
+1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1,
+1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0,
+1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1
+, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1,
+1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -93,6 +105,14 @@ float power = 0.017f;
 float fTime = 0.1f;
 glm::vec3 Tsphere;
 
+void make_snow(int i) {
+
+		snow[i].x = xspherespeed + float(rand() % 10) / 10 - 0.5;
+		snow[i].z = zspherespeed + float(rand() % 10) / 10 - 0.5;
+		snow[i].y = float(rand() % 10) / 10;
+		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
+}
+
 SoundManager* soundManager = nullptr;
 
 bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
@@ -126,26 +146,30 @@ void timerfunc(int value) {
 		snow[i].y -= snow[i].fast;
 		if (snow[i].y < 0) make_snow(i);
 	}
-
 	//길 움직이기
 	for (int i = 0; i < road_count; i++) {
+		
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
 			xspherespeed - 0.4, zspherespeed - 0.4, xspherespeed + 0.4, zspherespeed + 0.4))
 		{
 			road_y_move[i] += 0.01;
 		}
+		// 90초에 300블럭 9초에 30 3초에 10 1초에 3블럭
 	}
 
 	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
 		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.001f);
+		v = 0;
+
 	}
 	else {				// 좌측 방향 x 보는 방향 기준
 		Tsphere = glm::vec3(xspherespeed += 0.001f, yspherespeed -= gravity, zspherespeed);
+		v = 1;
 	}
 
 	for (int i = 0; i < road_count; ++i)
-		if (yspherespeed < road_y_move[i] + 0.2f) 
-			yspherespeed = road_y_move[i] + 0.2f;
+		if (yspherespeed < road_y_move[i] + 0.1f) 
+			yspherespeed = road_y_move[i] + 0.1f;
 
 	if (jump) {		// 증가값이 일정값 넘으면 역방향
 		Tsphere = glm::vec3(xspherespeed, yspherespeed += (power * fTime - (gravity * (fTime * fTime))) * 0.5f, zspherespeed);
@@ -377,7 +401,7 @@ GLvoid drawScene()
 
 
 	glUniform3f(objColorLocation, 1.0, 1.0, 1.0); // 객체 색 바꿈
-	snow_scale = glm::scale(snow_scale, glm::vec3(0.002, 0.002, 0.002));
+	snow_scale = glm::scale(snow_scale, glm::vec3(0.005, 0.005, 0.005));
 	for (int i = 0; i < 100; i++) {
 		snow_move[i] = glm::translate(snow_move[i], glm::vec3(snow[i].x, snow[i].y, snow[i].z));
 		snow_obj[i] = snow_move[i] * snow_scale;
@@ -649,14 +673,13 @@ void make_map() {
 	float road_volume = 0.2;
 	int x_inc_count = 0;
 	int z_inc_count = 0;
-	
+	printf("%d", sizeof(road_x_move)/4);
 	for (int i = 0; i < road_count; i++) {
 		road_x_move[i] = x_inc_count * road_volume;
 		road_y_move[i] = -1.0;
 		road_z_move[i] = -z_inc_count * road_volume;
 
-		int r = rand() % 2;
-		if (r == 0) x_inc_count++;
+		if (music_road[i] == 0) x_inc_count++;
 		else z_inc_count++;
 	}
 	for (int i = 0; i < 10; i++) {
