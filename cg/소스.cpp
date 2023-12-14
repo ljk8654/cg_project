@@ -4,7 +4,6 @@
 #include <windows.h>
 //--- 메인 함수
 //--- 함수 선언 추가하기
-#define ONE_SECOND 333
 GLuint window_w = 1000;
 GLuint window_h = 900;
 
@@ -12,16 +11,17 @@ unsigned int lightPosLocation;
 unsigned int lightColorLocation;
 unsigned int viewLocation;
 
-glm::vec3 lightPos(0, 100, 0);
+glm::vec3 lightPos(0,0, 0);
 glm::vec3 lightColor(0.8, 0.8, 0.8);
-glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
+glm::vec3 cameraPos(0, +0, 0); //--- 카메라 위치
 
-int road_count = 350;
+int road_count = 400;
 int old_index = 0;
+float old_count = 0;
 int v = 0;
-float road_x_move[350];
-float road_y_move[350];
-float road_z_move[350];
+float road_x_move[400];
+float road_y_move[400];
+float road_z_move[400];
 GLfloat APS = 0.25;
 GLfloat yRotate = 0;
 float yRotateDirection = 1.0f;
@@ -43,23 +43,32 @@ struct Snow {
 Snow snow[200];
 
 
-int music_road[] = { 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1
-, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
-1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1
-, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1,
-0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1,
-1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1,
-0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0
-, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0,
-1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1,
-0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1,
-0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0,
-1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
-1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1,
-1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0,
-1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1
-, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1,
-1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
+int music_road[] = {
+0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 
+0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1,
+0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 
+0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 
+0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 
+0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 
+0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 
+1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 
+0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 
+1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 
+0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 
+0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 
+1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 
+1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 
+1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 
+1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 
+1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0,
+0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 
+0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0,
+0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 
+1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0,};
+
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -224,9 +233,9 @@ void timerfunc(int value) {
 		yRotateDirection = 1.0f;  // 정방향으로 회전
 		yRotate = -10.0f;  // 회전 각도 초기화
 	}
-
+	
 	glutPostRedisplay();
-	glutTimerFunc(1, timerfunc, 0);
+	glutTimerFunc(10, timerfunc, 0);
 
 }
 
@@ -303,6 +312,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 {
+	
 	glutInit(&argc, argv);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -346,9 +356,9 @@ GLvoid drawScene()
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box[350] = { glm::mat4(1.0f) };
+	glm::mat4 box[400] = { glm::mat4(1.0f) };
 	glm::mat4 box_scale = glm::mat4(1.0f);
-	glm::mat4 map_move[350] = { glm::mat4(1.0f) };
+	glm::mat4 map_move[400] = { glm::mat4(1.0f) };
 	glm::mat4 snow_obj[200] = { glm::mat4(1.0f) };
 	glm::mat4 snow_scale = glm::mat4(1.0f);
 	glm::mat4 obj_scale = glm::mat4(1.0f);
@@ -356,7 +366,7 @@ GLvoid drawScene()
 	glm::mat4 Oobj = glm::mat4(1.0f);
 
 
-	for (int i = 0; i < 350; i++) {
+	for (int i = 0; i < road_count; i++) {
 		map_move[i] = glm::mat4(1.0f);
 		box[i] = glm::mat4(1.0f);
 	}
@@ -387,12 +397,12 @@ GLvoid drawScene()
 	perspective(shaderProgramID, 0.0f);
 	CameraThird(shaderProgramID, glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z), glm::vec3(xspherespeed+0.3, yspherespeed+0.3, zspherespeed-0.1), yRotate);
     
-	lightPos = glm::vec3(xspherespeed, yspherespeed + 0.3, zspherespeed);
+	lightPos = glm::vec3(xspherespeed, yspherespeed + 0.5, zspherespeed);
 	float light = 1 - abs((yspherespeed - 5) / 140);
 	lightColor = glm::vec3(light, light, light);
 	glUniform3f(lightPosLocation, lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(lightColorLocation, lightColor.x, lightColor.y, lightColor.z);
-	glUniform3f(viewLocation, cameraPos.x, cameraPos.y, cameraPos.z);
+	glUniform3f(viewLocation, xspherespeed , yspherespeed , zspherespeed );
 
 
 	//box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
@@ -413,7 +423,7 @@ GLvoid drawScene()
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
-	for (int i = 0; i < 350; i++) {
+	for (int i = 0; i < road_count; i++) {
 		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
 		box[i] = map_move[i] * box_scale;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
@@ -444,6 +454,7 @@ GLvoid Reshape(int w, int h)
 //카메라 위치에 따라서 땅이 올라옴 충돌박스?
 void InitBuffer()
 {
+	printf("%d", sizeof(music_road) / 4);
 	make_map();
 	for(int i=0; i< 200; i++) make_snow(i);
 	//ReadObj("mushroom.obj");
@@ -696,7 +707,6 @@ void make_map() {
 	float road_volume = 0.2;
 	int x_inc_count = 0;
 	int z_inc_count = 0;
-	printf("%d", sizeof(road_x_move)/4);
 	for (int i = 0; i < road_count; i++) {
 		road_x_move[i] = x_inc_count * road_volume;
 		road_y_move[i] = -1.0;

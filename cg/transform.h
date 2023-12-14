@@ -14,7 +14,7 @@ GLvoid ortho(GLuint shaderProgramID, GLfloat space)
 GLvoid perspective(GLuint shaderProgramID, GLfloat space)
 {
 	glm::mat4 projection = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(80.0f), 1.0f, 0.1f, 1000.0f);
+	projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 1000.0f);
 	projection = glm::translate(projection, glm::vec3(0.0, 0.0, space));
 
 	unsigned int projectionLocation = glGetUniformLocation(shaderProgramID, "projection");
