@@ -130,7 +130,7 @@ void timerfunc(int value) {
 	//길 움직이기
 	for (int i = 0; i < road_count; i++) {
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
-			cameraPos.x - 0.6, cameraPos.z - 0.6, cameraPos.x + 0.6, cameraPos.z + 0.6))
+			xspherespeed - 0.4, zspherespeed - 0.4, xspherespeed + 0.4, zspherespeed + 0.4))
 		{
 			road_y_move[i] += 0.01;
 		}
@@ -156,8 +156,8 @@ void timerfunc(int value) {
 			fTime += 0.1f;
 
 		for (int i = 0; i < road_count; ++i) {
-			if (yspherespeed < road_y_move[i] + 0.2f) {
-				yspherespeed = road_y_move[i] + 0.2f;
+			if (yspherespeed < road_y_move[i]) {
+				yspherespeed = road_y_move[i];
 				jump = false;
 				fTime = 0.f;
 				power = 0.017f;
@@ -649,6 +649,7 @@ void make_map() {
 	float road_volume = 0.2;
 	int x_inc_count = 0;
 	int z_inc_count = 0;
+	
 	for (int i = 0; i < road_count; i++) {
 		road_x_move[i] = x_inc_count * road_volume;
 		road_y_move[i] = -1.0;
@@ -657,6 +658,9 @@ void make_map() {
 		int r = rand() % 2;
 		if (r == 0) x_inc_count++;
 		else z_inc_count++;
+	}
+	for (int i = 0; i < 10; i++) {
+		road_y_move[i] = -0.5;
 	}
 }
 //--- out_Color: 버텍스 세이더에서 입력받는 색상 값
