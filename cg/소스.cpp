@@ -1,10 +1,10 @@
 #include "std.h"
 #include "transform.h"
 #include "Sound.h"
-
+#include <windows.h>
 //--- 메인 함수
 //--- 함수 선언 추가하기
-
+#define ONE_SECOND 333
 GLuint window_w = 1000;
 GLuint window_h = 900;
 
@@ -16,10 +16,12 @@ glm::vec3 lightPos(0, 100, 0);
 glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
 
-int road_count = 300;
-float road_x_move[300];
-float road_y_move[300];
-float road_z_move[300];
+int road_count = 350;
+int old_index = 0;
+int v = 0;
+float road_x_move[350];
+float road_y_move[350];
+float road_z_move[350];
 GLfloat APS = 0.25;
 GLfloat yRotate = 0;
 float yRotateDirection = 1.0f;
@@ -38,16 +40,26 @@ struct Snow {
 	float fast;
 };
 
-Snow snow[100];
+Snow snow[200];
 
-void make_snow(int i) {
 
-		snow[i].x = cameraPos.x + float(rand() % 10) / 10 - 0.5;
-		snow[i].z = cameraPos.z + float(rand() % 10) / 10 - 0.5;
-		snow[i].y = 1.0;
-		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
-}
-
+int music_road[] = { 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1
+, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
+1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1
+, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1,
+0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1,
+1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1,
+0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0
+, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1,
+0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1,
+0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0,
+1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1,
+1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0,
+1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1
+, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1,
+1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -93,6 +105,14 @@ float power = 0.017f;
 float fTime = 0.1f;
 glm::vec3 Tsphere;
 
+void make_snow(int i) {
+
+		snow[i].x = xspherespeed + float(rand() % 10) / 10 - 0.5;
+		snow[i].z = zspherespeed + float(rand() % 10) / 10 - 0.5;
+		snow[i].y = float(rand() % 20) / 10;
+		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
+}
+
 SoundManager* soundManager = nullptr;
 
 bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
@@ -126,21 +146,25 @@ void timerfunc(int value) {
 		snow[i].y -= snow[i].fast;
 		if (snow[i].y < 0) make_snow(i);
 	}
-
 	//길 움직이기
 	for (int i = 0; i < road_count; i++) {
+		
 		if (road_y_move[i] < -0.5 && isPointInRect(road_x_move[i], road_z_move[i],
-			cameraPos.x - 1.5, cameraPos.z - 1.5, cameraPos.x + 1.5, cameraPos.z + 1.5))
+			xspherespeed - 0.4, zspherespeed - 0.4, xspherespeed + 0.4, zspherespeed + 0.4))
 		{
 			road_y_move[i] += 0.01;
 		}
+		// 90초에 300블럭 9초에 30 3초에 10 1초에 3블럭
 	}
 
 	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.0005f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.001f);
+		v = 0;
+
 	}
 	else {				// 좌측 방향 x 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed += 0.0005f, yspherespeed -= gravity, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.001f, yspherespeed -= gravity, zspherespeed);
+		v = 1;
 	}
 
 	for (int i = 0; i < road_count; ++i) {
@@ -317,17 +341,17 @@ GLvoid drawScene()
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box[300] = { glm::mat4(1.0f) };
+	glm::mat4 box[350] = { glm::mat4(1.0f) };
 	glm::mat4 box_scale = glm::mat4(1.0f);
-	glm::mat4 map_move[300] = { glm::mat4(1.0f) };
-	glm::mat4 snow_obj[100] = { glm::mat4(1.0f) };
+	glm::mat4 map_move[350] = { glm::mat4(1.0f) };
+	glm::mat4 snow_obj[200] = { glm::mat4(1.0f) };
 	glm::mat4 snow_scale = glm::mat4(1.0f);
 	glm::mat4 obj_scale = glm::mat4(1.0f);
-	glm::mat4 snow_move[100] = { glm::mat4(1.0f) };
+	glm::mat4 snow_move[200] = { glm::mat4(1.0f) };
 	glm::mat4 Oobj = glm::mat4(1.0f);
 
 
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < 350; i++) {
 		map_move[i] = glm::mat4(1.0f);
 		box[i] = glm::mat4(1.0f);
 	}
@@ -384,7 +408,7 @@ GLvoid drawScene()
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < 350; i++) {
 		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
 		box[i] = map_move[i] * box_scale;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
@@ -395,7 +419,7 @@ GLvoid drawScene()
 
 
 	glUniform3f(objColorLocation, 1.0, 1.0, 1.0); // 객체 색 바꿈
-	snow_scale = glm::scale(snow_scale, glm::vec3(0.002, 0.002, 0.002));
+	snow_scale = glm::scale(snow_scale, glm::vec3(0.005, 0.005, 0.005));
 	for (int i = 0; i < 100; i++) {
 		snow_move[i] = glm::translate(snow_move[i], glm::vec3(snow[i].x, snow[i].y, snow[i].z));
 		snow_obj[i] = snow_move[i] * snow_scale;
@@ -416,7 +440,7 @@ GLvoid Reshape(int w, int h)
 void InitBuffer()
 {
 	make_map();
-	for(int i=0; i< 100; i++) make_snow(i);
+	for(int i=0; i< 200; i++) make_snow(i);
 	//ReadObj("mushroom.obj");
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
@@ -667,14 +691,17 @@ void make_map() {
 	float road_volume = 0.2;
 	int x_inc_count = 0;
 	int z_inc_count = 0;
+	printf("%d", sizeof(road_x_move)/4);
 	for (int i = 0; i < road_count; i++) {
 		road_x_move[i] = x_inc_count * road_volume;
 		road_y_move[i] = -1.0;
 		road_z_move[i] = -z_inc_count * road_volume;
 
-		int r = rand() % 2;
-		if (r == 0) x_inc_count++;
+		if (music_road[i] == 0) x_inc_count++;
 		else z_inc_count++;
+	}
+	for (int i = 0; i < 10; i++) {
+		road_y_move[i] = -0.5;
 	}
 }
 //--- out_Color: 버텍스 세이더에서 입력받는 색상 값
