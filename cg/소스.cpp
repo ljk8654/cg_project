@@ -137,21 +137,23 @@ void timerfunc(int value) {
 	}
 
 	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.005f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.0005f);
 	}
 	else {				// 좌측 방향 x 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed += 0.005f, yspherespeed -= gravity, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.0005f, yspherespeed -= gravity, zspherespeed);
 	}
 
 	for (int i = 0; i < road_count; ++i) {
 		if (yspherespeed < road_y_move[i] + 0.2f) {
 			if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i] - 0.5, road_z_move[i] - 0.5, road_x_move[i] + 0.5, road_z_move[i] + 0.5))) {
-				yspherespeed -= 0.005f;
-				break;
+				if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i + 1] - 0.5, road_z_move[i + 1] - 0.5, road_x_move[i + 1] + 0.5, road_z_move[i + 1] + 0.5))) {
+					std::cout << "여기가 닿았다고?" << '\n';
+					yspherespeed -= 0.005f;
+					break;
+				}
 			}
 			else
 				yspherespeed = road_y_move[i] + 0.2f;
-
 		}
 	}
 
@@ -166,8 +168,10 @@ void timerfunc(int value) {
 		for (int i = 0; i < road_count; ++i) {
 			if (yspherespeed < road_y_move[i] + 0.2f) {
 				if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i] - 0.5, road_z_move[i] - 0.5, road_x_move[i] + 0.5, road_z_move[i] + 0.5))) {
-					std::cout << "떨어져야함" << '\n';
-					break;
+					if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i + 1] - 0.5, road_z_move[i + 1] - 0.5, road_x_move[i + 1] + 0.5, road_z_move[i + 1] + 0.5))) {
+						std::cout << "떨어져야함" << '\n';
+						break;
+					}
 				}
 				else {
 					yspherespeed = road_y_move[i] + 0.2f;
