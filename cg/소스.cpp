@@ -40,7 +40,7 @@ struct Snow {
 	float fast;
 };
 
-Snow snow[100];
+Snow snow[200];
 
 
 int music_road[] = { 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1
@@ -109,7 +109,7 @@ void make_snow(int i) {
 
 		snow[i].x = xspherespeed + float(rand() % 10) / 10 - 0.5;
 		snow[i].z = zspherespeed + float(rand() % 10) / 10 - 0.5;
-		snow[i].y = float(rand() % 10) / 10;
+		snow[i].y = float(rand() % 20) / 10;
 		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
 }
 
@@ -326,10 +326,10 @@ GLvoid drawScene()
 	glm::mat4 box[300] = { glm::mat4(1.0f) };
 	glm::mat4 box_scale = glm::mat4(1.0f);
 	glm::mat4 map_move[300] = { glm::mat4(1.0f) };
-	glm::mat4 snow_obj[100] = { glm::mat4(1.0f) };
+	glm::mat4 snow_obj[200] = { glm::mat4(1.0f) };
 	glm::mat4 snow_scale = glm::mat4(1.0f);
 	glm::mat4 obj_scale = glm::mat4(1.0f);
-	glm::mat4 snow_move[100] = { glm::mat4(1.0f) };
+	glm::mat4 snow_move[200] = { glm::mat4(1.0f) };
 	glm::mat4 Oobj = glm::mat4(1.0f);
 
 
@@ -422,7 +422,7 @@ GLvoid Reshape(int w, int h)
 void InitBuffer()
 {
 	make_map();
-	for(int i=0; i< 100; i++) make_snow(i);
+	for(int i=0; i< 200; i++) make_snow(i);
 	//ReadObj("mushroom.obj");
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &vao);
