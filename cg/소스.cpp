@@ -220,7 +220,6 @@ void timerfunc(int value) {
 			}
 		}
 	}
-	// 떨어지는 거 아직 미구현
 
 	yRotate += APS * yRotateDirection * frameTime;
 
@@ -353,8 +352,6 @@ GLvoid drawScene()
 
 	//--- 사용할 VAO 불러오기
 	glm::mat4 Tx = glm::mat4(1.0f); //--- 이동 행렬 선언
-	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
-	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
 	glm::mat4 box[400] = { glm::mat4(1.0f) };
 	glm::mat4 box_scale = glm::mat4(1.0f);
@@ -451,7 +448,7 @@ GLvoid Reshape(int w, int h)
 {
 	glViewport(0, 0, w, h);
 }
-//카메라 위치에 따라서 땅이 올라옴 충돌박스?
+
 void InitBuffer()
 {
 	printf("%d", sizeof(music_road) / 4);
@@ -586,7 +583,7 @@ void ReadObj(const char* fileName)
 	while (!feof(fp)) {
 		if (fscanf(fp, "%s", buff) == 3) printf("hello it's 3");
 
-		// vertex or element buffer
+		// vertex buffer
 		if (buff[0] == 'v' && buff[1] == '\0') {
 			glm::vec3 pos;
 			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
@@ -610,19 +607,16 @@ void ReadObj(const char* fileName)
 			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(5);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
-			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
 			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(7);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
-			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
 			if (fscanf(fp, "%d/%d/%d", &v, &t, &n) != 3) exit(8);
 			temp.pos = vtx[v - 1];
 			temp.nor = nor[n - 1];
-			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 		}
 
@@ -653,7 +647,7 @@ void ReadObj2(const char* fileName)
 	while (!feof(fp)) {
 		if (fscanf(fp, "%s", buff) == 3) printf("hello it's 3");
 
-		// vertex or element buffer
+		// vertex buffer
 		if (buff[0] == 'v' && buff[1] == '\0') {
 			glm::vec3 pos;
 			if (fscanf(fp, "%f %f %f", &pos.x, &pos.y, &pos.z) != 3) exit(1);
@@ -677,19 +671,16 @@ void ReadObj2(const char* fileName)
 			if (fscanf(fp, "%d/%d", &v, &t) != 2) exit(5);
 			temp.pos = vtx[v - 1];
 			temp.nor = tex[t - 1];
-			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
 			if (fscanf(fp, "%d/%d", &v, &n) != 2) exit(7);
 			temp.pos = vtx[v - 1];
 			temp.nor = tex[n - 1];
-			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 
 			if (fscanf(fp, "%d/%d", &v, &n) != 2) exit(8);
 			temp.pos = vtx[v - 1];
 			temp.nor = tex[n - 1];
-			//temp.TexCoordinate = tex[t - 1];
 			m_vertices.push_back(temp);
 		}
 
