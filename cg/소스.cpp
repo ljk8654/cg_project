@@ -12,16 +12,16 @@ unsigned int lightColorLocation;
 unsigned int viewLocation;
 
 glm::vec3 lightPos(0,0, 0);
-glm::vec3 lightColor(0.8, 0.8, 0.8);
+glm::vec3 lightColor(1.0, 1.0, 1.0);
 glm::vec3 cameraPos(0, +0, 0); //--- 카메라 위치
 
-int road_count = 400;
+int road_count = 238;
 int old_index = 0;
 float old_count = 0;
 int v = 0;
-float road_x_move[400];
-float road_y_move[400];
-float road_z_move[400];
+float road_x_move[238];
+float road_y_move[238];
+float road_z_move[238];
 GLfloat APS = 0.25;
 GLfloat yRotate = 0;
 float yRotateDirection = 1.0f;
@@ -44,30 +44,18 @@ Snow snow[200];
 
 
 int music_road[] = {
-0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 
-0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1,
-0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 
-0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 
-0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 
-0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 
-0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 
-1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 
-0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 
-1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 
-0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 
-0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 
-1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 
-1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 
-1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 
-1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 
-1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0,
-0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 
-0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0,
-0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 
-1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 0,};
+0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0,
+0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0,
+0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 
+0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 
+1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 
+1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 
+1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 
+1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1,
+1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0,
+1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0,
+1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 
 float vertices[] = { //--- 버텍스 속성: 좌표값(FragPos), 노말값 (Normal)
 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -130,7 +118,6 @@ bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, fl
 	// 충돌 검사
 	if ((rect1_left < rect2_right) && (rect1_top < rect2_bottom) && (rect1_right > rect2_left) &&
 		(rect1_bottom > rect2_top)) {
-		printf("222");
 
 		return true;  // 충돌이 있음
 
@@ -163,17 +150,19 @@ void timerfunc(int value) {
 			xspherespeed - 0.4, zspherespeed - 0.4, xspherespeed + 0.4, zspherespeed + 0.4))
 		{
 			road_y_move[i] += 0.01;
+			if (i > 227 && road_y_move[i] > -0.5) {
+				lightColor.x -= 0.1;
+				lightColor.y -= 0.1;
+				lightColor.z -= 0.1;
+			}
 		}
-		// 90초에 300블럭 9초에 30 3초에 10 1초에 3블럭
 	}
 
 	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
 		Tsphere = glm::vec3(xspherespeed += 0.005f, yspherespeed -= gravity, zspherespeed);
-		v = 0;
 	}
 	else {				// 좌측 방향 x 보는 방향 기준
 		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.005f);
-		v = 1;
 	}
 
 
@@ -356,10 +345,10 @@ GLvoid drawScene()
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box[400] = { glm::mat4(1.0f) };
+	glm::mat4 box[238] = { glm::mat4(1.0f) };
 	glm::mat4 box_scale = glm::mat4(1.0f);
-	glm::mat4 map_move[400] = { glm::mat4(1.0f) };
-	glm::mat4 snow_obj[200] = { glm::mat4(1.0f) };
+	glm::mat4 map_move[238] = { glm::mat4(1.0f) };
+	glm::mat4 snow_obj[238] = { glm::mat4(1.0f) };
 	glm::mat4 snow_scale = glm::mat4(1.0f);
 	glm::mat4 obj_scale = glm::mat4(1.0f);
 	glm::mat4 snow_move[200] = { glm::mat4(1.0f) };
@@ -399,7 +388,6 @@ GLvoid drawScene()
     
 	lightPos = glm::vec3(xspherespeed, yspherespeed + 0.5, zspherespeed);
 	float light = 1 - abs((yspherespeed - 5) / 140);
-	lightColor = glm::vec3(light, light, light);
 	glUniform3f(lightPosLocation, lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(lightColorLocation, lightColor.x, lightColor.y, lightColor.z);
 	glUniform3f(viewLocation, xspherespeed , yspherespeed , zspherespeed );
@@ -454,7 +442,6 @@ GLvoid Reshape(int w, int h)
 //카메라 위치에 따라서 땅이 올라옴 충돌박스?
 void InitBuffer()
 {
-	printf("%d", sizeof(music_road) / 4);
 	make_map();
 	for(int i=0; i< 200; i++) make_snow(i);
 	//ReadObj("mushroom.obj");
