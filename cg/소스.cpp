@@ -16,12 +16,12 @@ glm::vec3 lightPos(0, 100, 0);
 glm::vec3 lightColor(0.8, 0.8, 0.8);
 glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
 
-int road_count = 300;
+int road_count = 350;
 int old_index = 0;
 int v = 0;
-float road_x_move[300];
-float road_y_move[300];
-float road_z_move[300];
+float road_x_move[350];
+float road_y_move[350];
+float road_z_move[350];
 GLfloat APS = 0.25;
 GLfloat yRotate = 0;
 float yRotateDirection = 1.0f;
@@ -323,9 +323,9 @@ GLvoid drawScene()
 	glm::mat4 Rz = glm::mat4(1.0f); //--- 회전 행렬 선언
 	glm::mat4 TR = glm::mat4(1.0f);
 	glm::mat4 Sc = glm::mat4(1.0f);
-	glm::mat4 box[300] = { glm::mat4(1.0f) };
+	glm::mat4 box[350] = { glm::mat4(1.0f) };
 	glm::mat4 box_scale = glm::mat4(1.0f);
-	glm::mat4 map_move[300] = { glm::mat4(1.0f) };
+	glm::mat4 map_move[350] = { glm::mat4(1.0f) };
 	glm::mat4 snow_obj[200] = { glm::mat4(1.0f) };
 	glm::mat4 snow_scale = glm::mat4(1.0f);
 	glm::mat4 obj_scale = glm::mat4(1.0f);
@@ -333,7 +333,7 @@ GLvoid drawScene()
 	glm::mat4 Oobj = glm::mat4(1.0f);
 
 
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < 350; i++) {
 		map_move[i] = glm::mat4(1.0f);
 		box[i] = glm::mat4(1.0f);
 	}
@@ -390,7 +390,7 @@ GLvoid drawScene()
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 	glBindVertexArray(map_vao);
 	box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < 350; i++) {
 		map_move[i] = glm::translate(map_move[i], glm::vec3(road_x_move[i], road_y_move[i], road_z_move[i]));
 		box[i] = map_move[i] * box_scale;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(box[i]));
