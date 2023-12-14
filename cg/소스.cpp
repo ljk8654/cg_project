@@ -103,6 +103,7 @@ float yspherespeed = -0.3f;
 float gravity = 0.001f;
 float power = 0.017f;
 float fTime = 0.1f;
+int roadcnt = 0;
 glm::vec3 Tsphere;
 
 void make_snow(int i) {
@@ -158,26 +159,26 @@ void timerfunc(int value) {
 	}
 
 	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.001f);
+		Tsphere = glm::vec3(xspherespeed += 0.001f, yspherespeed -= gravity, zspherespeed);
 		v = 0;
-
 	}
 	else {				// 좌측 방향 x 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed += 0.001f, yspherespeed -= gravity, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.001f);
 		v = 1;
 	}
 
-	for (int i = 0; i < road_count; ++i) {
-		if (yspherespeed < road_y_move[i] + 0.2f) {
-			if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i] - 0.5, road_z_move[i] - 0.5, road_x_move[i] + 0.5, road_z_move[i] + 0.5))) {
-				if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i + 1] - 0.5, road_z_move[i + 1] - 0.5, road_x_move[i + 1] + 0.5, road_z_move[i + 1] + 0.5))) {
-					std::cout << "여기가 닿았다고?" << '\n';
-					yspherespeed -= 0.005f;
-					break;
-				}
-			}
+
+	if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.5, road_z_move[roadcnt] - 0.5, road_x_move[roadcnt] + 0.5, road_z_move[roadcnt] + 0.5))) {
+		if (yspherespeed < road_y_move[roadcnt] + 0.2f) {
+			yspherespeed = road_y_move[roadcnt] + 0.2f;
+		}
+	}
+	else {
+		if (yspherespeed < road_y_move[roadcnt] + 0.2f) {
+			roadcnt++;
+			if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.5, road_z_move[roadcnt] - 0.5, road_x_move[roadcnt] + 0.5, road_z_move[roadcnt] + 0.5)));
 			else
-				yspherespeed = road_y_move[i] + 0.2f;
+				yspherespeed -= 0.005f;
 		}
 	}
 
@@ -189,14 +190,10 @@ void timerfunc(int value) {
 		else
 			fTime += 0.1f;
 
-		for (int i = 0; i < road_count; ++i) {
+		/*for (int i = 0; i < road_count; ++i) {
 			if (yspherespeed < road_y_move[i] + 0.2f) {
-				if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i] - 0.5, road_z_move[i] - 0.5, road_x_move[i] + 0.5, road_z_move[i] + 0.5))) {
-					if (!(isPointInRect(xspherespeed, zspherespeed, road_x_move[i + 1] - 0.5, road_z_move[i + 1] - 0.5, road_x_move[i + 1] + 0.5, road_z_move[i + 1] + 0.5))) {
-						std::cout << "떨어져야함" << '\n';
-						break;
-					}
-				}
+				std::cout << "떨어져야함" << '\n';
+				break;
 				else {
 					yspherespeed = road_y_move[i] + 0.2f;
 					jump = false;
@@ -204,7 +201,7 @@ void timerfunc(int value) {
 					power = 0.017f;
 				}
 			}
-		}
+		}*/
 	}
 	// 떨어지는 거 아직 미구현
 
