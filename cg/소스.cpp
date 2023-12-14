@@ -159,16 +159,16 @@ void timerfunc(int value) {
 	}
 
 	if (!spacebar) {	// 우측 방향 z 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed += 0.001f, yspherespeed -= gravity, zspherespeed);
+		Tsphere = glm::vec3(xspherespeed += 0.005f, yspherespeed -= gravity, zspherespeed);
 		v = 0;
 	}
 	else {				// 좌측 방향 x 보는 방향 기준
-		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.001f);
+		Tsphere = glm::vec3(xspherespeed, yspherespeed -= gravity, zspherespeed -= 0.005f);
 		v = 1;
 	}
 
 
-	if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.5, road_z_move[roadcnt] - 0.5, road_x_move[roadcnt] + 0.5, road_z_move[roadcnt] + 0.5))) {
+	if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.2, road_z_move[roadcnt] - 0.2, road_x_move[roadcnt] + 0.2, road_z_move[roadcnt] + 0.2))) {
 		if (yspherespeed < road_y_move[roadcnt] + 0.2f) {
 			yspherespeed = road_y_move[roadcnt] + 0.2f;
 		}
@@ -176,9 +176,12 @@ void timerfunc(int value) {
 	else {
 		if (yspherespeed < road_y_move[roadcnt] + 0.2f) {
 			roadcnt++;
-			if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.5, road_z_move[roadcnt] - 0.5, road_x_move[roadcnt] + 0.5, road_z_move[roadcnt] + 0.5)));
-			else
-				yspherespeed -= 0.005f;
+			if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.2, road_z_move[roadcnt] - 0.2, road_x_move[roadcnt] + 0.2, road_z_move[roadcnt] + 0.2))) {
+				yspherespeed = road_y_move[roadcnt] + 0.2f;
+			}
+			else {
+				yspherespeed -= gravity * 10;
+			}
 		}
 	}
 
@@ -189,19 +192,24 @@ void timerfunc(int value) {
 			fTime += 0.03f;
 		else
 			fTime += 0.1f;
-
-		/*for (int i = 0; i < road_count; ++i) {
-			if (yspherespeed < road_y_move[i] + 0.2f) {
-				std::cout << "떨어져야함" << '\n';
-				break;
+		
+		if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.2, road_z_move[roadcnt] - 0.2, road_x_move[roadcnt] + 0.2, road_z_move[roadcnt] + 0.2))) {
+			if (yspherespeed < road_y_move[roadcnt] + 0.2f) {
+				yspherespeed = road_y_move[roadcnt] + 0.2f;
+				jump = false;
+				fTime = 0.f;
+				power = 0.017f;
+			}
+		}
+		else {
+			if (yspherespeed < road_y_move[roadcnt] + 0.2f) {
+				roadcnt++;
+				if ((isPointInRect(xspherespeed, zspherespeed, road_x_move[roadcnt] - 0.2, road_z_move[roadcnt] - 0.2, road_x_move[roadcnt] + 0.2, road_z_move[roadcnt] + 0.2)));
 				else {
-					yspherespeed = road_y_move[i] + 0.2f;
-					jump = false;
-					fTime = 0.f;
-					power = 0.017f;
+					yspherespeed += (power * fTime - (gravity * (fTime * fTime))) * 0.5f;
 				}
 			}
-		}*/
+		}
 	}
 	// 떨어지는 거 아직 미구현
 
