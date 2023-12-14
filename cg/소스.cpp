@@ -104,28 +104,14 @@ int roadcnt = 0;
 glm::vec3 Tsphere;
 
 void make_snow(int i) {
-
-		snow[i].x = xspherespeed + float(rand() % 10) / 10 - 0.5;
-		snow[i].z = zspherespeed + float(rand() % 10) / 10 - 0.5;
-		snow[i].y = float(rand() % 20) / 10;
-		snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
+	snow[i].x = xspherespeed + float(rand() % 10) / 10 - 0.5;
+	snow[i].z = zspherespeed + float(rand() % 10) / 10 - 0.5;
+	snow[i].y = float(rand() % 20) / 10;
+	snow[i].fast = float(rand() % 20) / 10000 + 0.0001;
 }
 
 SoundManager* soundManager = nullptr;
 
-bool isRectCollision(float rect1_left, float rect1_bottom, float rect1_right, float rect1_top,
-	float rect2_left, float rect2_bottom, float rect2_right, float rect2_top) {
-	// 충돌 검사
-	if ((rect1_left < rect2_right) && (rect1_top < rect2_bottom) && (rect1_right > rect2_left) &&
-		(rect1_bottom > rect2_top)) {
-
-		return true;  // 충돌이 있음
-
-	}
-	else {
-		return false;  // 충돌이 없음
-	}
-}
 bool isPointInRect(float x, float y, float rect_left, float rect_bottom, float rect_right, float rect_top) {
 	return (x >= rect_left && x <= rect_right && y >= rect_bottom && y <= rect_top);
 }
@@ -227,24 +213,6 @@ void timerfunc(int value) {
 
 }
 
-void Motion(int x, int y) {
-
-	float dot_x = ((float)x - 400) / 400.0;
-	float dot_y = (300.0 - (float)y) / 300.0;
-
-	glutPostRedisplay();
-
-}
-
-
-void Mouse(int button, int state, int x, int y) {
-	float dot_x = ((float)x - 400) / 400.0;
-	float dot_y = (300.0 - (float)y) / 300.0;
-
-	glutPostRedisplay();
-
-
-}
 void specialKeyCallback(int key, int x, int y) {
 	float moveSpeed = 0.1;  // 필요에 따라 이동 속도를 조절하세요
 	float angleRad = glm::radians(yRotate);  // 각도를 라디안으로 변환
@@ -294,8 +262,8 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 		}
 		break;
 	}
-	glutPostRedisplay();
 
+	glutPostRedisplay();
 }
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
@@ -428,7 +396,6 @@ GLvoid drawScene()
 	}
 
 	glutSwapBuffers();
-
 }
 
 //--- 다시그리기 콜백 함수
