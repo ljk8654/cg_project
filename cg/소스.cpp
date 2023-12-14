@@ -22,7 +22,7 @@ int v = 0;
 float road_x_move[238];
 float road_y_move[238];
 float road_z_move[238];
-GLfloat APS = 0.25;
+GLfloat APS = 0.5;
 GLfloat yRotate = 0;
 float yRotateDirection = 1.0f;
 GLfloat currentTime = 0.0f;
