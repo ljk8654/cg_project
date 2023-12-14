@@ -11,9 +11,9 @@ unsigned int lightPosLocation;
 unsigned int lightColorLocation;
 unsigned int viewLocation;
 
-glm::vec3 lightPos(0, 100, 0);
+glm::vec3 lightPos(0,0, 0);
 glm::vec3 lightColor(0.8, 0.8, 0.8);
-glm::vec3 cameraPos(-0.25, +1.0, +1); //--- 카메라 위치
+glm::vec3 cameraPos(0, +0, 0); //--- 카메라 위치
 
 int road_count = 400;
 int old_index = 0;
@@ -212,7 +212,7 @@ void timerfunc(int value) {
 	}
 	
 	glutPostRedisplay();
-	glutTimerFunc(1, timerfunc, 0);
+	glutTimerFunc(10, timerfunc, 0);
 
 }
 
@@ -374,12 +374,12 @@ GLvoid drawScene()
 	perspective(shaderProgramID, 0.0f);
 	CameraThird(shaderProgramID, glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z), glm::vec3(xspherespeed+0.3, yspherespeed+0.3, zspherespeed-0.1), yRotate);
     
-	lightPos = glm::vec3(xspherespeed, yspherespeed + 0.3, zspherespeed);
+	lightPos = glm::vec3(xspherespeed, yspherespeed + 0.5, zspherespeed);
 	float light = 1 - abs((yspherespeed - 5) / 140);
 	lightColor = glm::vec3(light, light, light);
 	glUniform3f(lightPosLocation, lightPos.x, lightPos.y, lightPos.z);
 	glUniform3f(lightColorLocation, lightColor.x, lightColor.y, lightColor.z);
-	glUniform3f(viewLocation, cameraPos.x, cameraPos.y, cameraPos.z);
+	glUniform3f(viewLocation, xspherespeed , yspherespeed , zspherespeed );
 
 
 	//box_scale = glm::scale(box_scale, glm::vec3(0.2, 0.2, 0.2));
